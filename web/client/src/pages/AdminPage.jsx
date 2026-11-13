@@ -84,12 +84,27 @@ export const AdminPage = () => {
   });
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
-  // Helper to auto-generate standardized unique batch reference
-  const generateDefaultBatchRef = (category) => {
-    const code = category?.toLowerCase().includes('sticker') ? 'STICKER' : 'KEYCHAIN';
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const rand = Math.floor(10 + Math.random() * 90);
-    return `BATCH-${code}-${dateStr}-${rand}`;
+  // Helper to auto-generate standardized sequential batch reference (e.g. BATCH-KC-20261113-001)
+  const generateSequentialBatchRef = (category, currentBatches = []) => {
+    const typeCode = category?.toLowerCase().includes('sticker') ? 'ST' : 'KC';
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = `BATCH-${typeCode}-${todayStr}-`;
+
+    let maxSeq = 0;
+    if (Array.isArray(currentBatches)) {
+      currentBatches.forEach((b) => {
+        const bId = b._id || b.batchId || '';
+        if (bId.startsWith(prefix)) {
+          const numPart = parseInt(bId.slice(prefix.length), 10);
+          if (!isNaN(numPart) && numPart > maxSeq) {
+            maxSeq = numPart;
+          }
+        }
+      });
+    }
+
+    const nextSeq = String(maxSeq + 1).padStart(3, '0');
+    return `${prefix}${nextSeq}`;
   };
 
   // -------------------------------------------------------------
@@ -98,7 +113,7 @@ export const AdminPage = () => {
   const [qrSubTab, setQrSubTab] = useState('batches'); // 'batches' | 'tags'
   const [batchesList, setBatchesList] = useState([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
-  const [batchRefInput, setBatchRefInput] = useState(() => generateDefaultBatchRef('Laser Metal Keychain'));
+  const [batchRefInput, setBatchRefInput] = useState(() => generateSequentialBatchRef('Laser Metal Keychain', []));
   const [selectedBatchFilter, setSelectedBatchFilter] = useState('all');
   const [inspectTag, setInspectTag] = useState(null);
 
@@ -275,15 +290,24 @@ export const AdminPage = () => {
     fetchTags();
   }, [tagStatusFilter, tagTypeFilter, selectedBatchFilter]);
 
+  // Auto-advance sequential batch reference when batchesList or category changes
+  useEffect(() => {
+    setBatchRefInput(generateSequentialBatchRef(qrCategory, batchesList));
+  }, [batchesList, qrCategory]);
+
   // =============================================================
   // Action Handlers
   // =============================================================
 
-  // 1. Bulk Generate Dummy QR Codes (Batch Reference is Compulsory)
+  // 1. Bulk Generate Dummy QR Codes (Batch Reference & Notes are Compulsory)
   const handleBulkGenerate = async (e) => {
     e.preventDefault();
     if (!batchRefInput.trim()) {
       addToast('error', 'Batch Reference is compulsory! Please enter a unique batch code.');
+      return;
+    }
+    if (!batchNotes.trim()) {
+      addToast('error', 'Production Notes are compulsory! Please enter production details.');
       return;
     }
 
@@ -300,18 +324,16 @@ export const AdminPage = () => {
           batchSize: parseInt(batchSize, 10) || 42,
           categoryTag: qrCategory,
           batchRef: batchRefInput.trim(),
-          notes: batchNotes || `Factory Batch for ${qrCategory}`,
+          notes: batchNotes.trim(),
         }),
       });
 
       if (res.ok) {
         const json = await res.json();
-        addToast('success', `Manufactured ${batchSize} unassigned QR tags for batch "${batchRefInput.trim()}"! Stored in database.`);
+        addToast('success', `Manufactured ${batchSize} sequential QR tags for batch "${batchRefInput.trim()}"! Stored in database.`);
         fetchTags();
         fetchBatches();
         fetchMetrics();
-        // Generate new sequential default for next batch
-        setBatchRefInput(generateDefaultBatchRef(qrCategory));
         setBatchNotes('');
         
         // Auto-open print modal with generated batch
@@ -678,7 +700,7 @@ export const AdminPage = () => {
   });
 
   return (
-    <div className="space-y-8 pb-32 max-w-7xl mx-auto px-4 pt-4 sm:pt-6 animate-fade-in print:p-0 print:m-0 print:max-w-none print:pb-0">
+    <div className="space-y-8 pb-32 max-w-7xl mx-auto px-4 pt-4 sm:pt-6 animate-fade-in print:p-0 print:m-0 print:max-w-none print:pb-0 print:space-y-0 print:block">
       
       {/* ========================================================= */}
       {/* SCREEN UI CONTAINER (Completely Hidden When Printing Sheet) */}
@@ -941,7 +963,7 @@ export const AdminPage = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. BATCH-KEYCHAIN-20261113-01"
+                  placeholder="e.g. BATCH-KC-20261113-001"
                   value={batchRefInput}
                   onChange={(e) => setBatchRefInput(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-cyan-600"
@@ -949,13 +971,17 @@ export const AdminPage = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Production Notes (Optional)</label>
+                <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Production Notes <span className="text-red-500 font-bold">*</span></span>
+                  <span className="text-[10px] text-cyan-700 font-mono font-bold">Compulsory</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. Islamabad Direct Stock Drop"
+                  required
+                  placeholder="e.g. Factory Run #1 for Islamabad Retail Stock"
                   value={batchNotes}
                   onChange={(e) => setBatchNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-cyan-600"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-medium focus:outline-none focus:border-cyan-600"
                 />
               </div>
 

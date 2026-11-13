@@ -52,6 +52,15 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
   const batchCode = batchInfo?.batchId || tags[0]?.batchId || 'BATCH-PROD-42';
   const totalSheets = Math.ceil(tags.length / 42) || 1;
 
+  // Chunk tags into groups of 42 (1 chunk per A4 physical sheet)
+  const tagChunks = [];
+  for (let i = 0; i < tags.length; i += 42) {
+    tagChunks.push(tags.slice(i, i + 42));
+  }
+  if (tagChunks.length === 0) {
+    tagChunks.push([]);
+  }
+
   return (
     <>
       {/* ========================================================= */}
@@ -60,17 +69,17 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
       {/* ========================================================= */}
       <style>{`
         @media print {
-          /* 1. Exact A4 Dimensions & Tight 5mm Margins */
+          /* 1. Exact A4 Dimensions & Tight 4mm Margins */
           @page {
             size: A4 portrait;
-            margin: 5mm 5mm 5mm 5mm !important;
+            margin: 4mm 4mm 4mm 4mm !important;
           }
 
           /* 2. Reset html & body to prevent second page spill */
           html, body {
             width: 100% !important;
             height: auto !important;
-            min-height: auto !important;
+            min-height: 0 !important;
             overflow: visible !important;
             background: #ffffff !important;
             color: #000000 !important;
@@ -84,11 +93,19 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
           header,
           footer,
           nav,
+          aside,
           .fixed {
             display: none !important;
           }
 
-          /* 4. Normal document flow */
+          /* 4. Root & ancestors reset */
+          #root, #root > div, main {
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+          }
+
+          /* 5. Print Sheet Master Container */
           #findix-factory-print-sheet {
             display: block !important;
             position: static !important;
@@ -97,32 +114,64 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
             padding: 0 !important;
             background: #ffffff !important;
             overflow: visible !important;
+            page-break-before: avoid !important;
+            break-before: avoid !important;
           }
 
-          /* 5. 6x7 Grid: 6 columns x 7 rows (38mm height each fits 1 page!) */
+          /* 6. Page Sheet (Exactly 1 A4 Page per 42 codes) */
+          .findix-a4-page-sheet {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .print-sheet-header {
+            height: 3.5mm !important;
+            max-height: 3.5mm !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            font-family: monospace !important;
+            font-size: 7.5px !important;
+            border-bottom: 0.5px solid #000 !important;
+            margin-bottom: 1.2mm !important;
+            padding-bottom: 0.5mm !important;
+            line-height: 1 !important;
+            box-sizing: border-box !important;
+          }
+
+          /* 7. 6x7 Grid: 6 columns x 7 rows (35.5mm height fits easily on Page 1!) */
           .findix-print-grid-42 {
             display: grid !important;
             grid-template-columns: repeat(6, 1fr) !important;
-            grid-auto-rows: 38mm !important;
-            gap: 1.5mm !important;
+            grid-auto-rows: 35.5mm !important;
+            gap: 1.2mm !important;
             width: 100% !important;
+            box-sizing: border-box !important;
+            page-break-before: avoid !important;
+            break-before: avoid !important;
           }
 
-          /* 6. Dashed cutting line, zero thick solid border */
+          /* 8. Dashed cutting line, centered tight QR and code */
           .print-card-item {
-            height: 38mm !important;
-            max-height: 38mm !important;
-            padding: 1mm !important;
+            height: 35.5mm !important;
+            max-height: 35.5mm !important;
             box-sizing: border-box !important;
             border: 1px dashed #94a3b8 !important;
-            border-radius: 4px !important;
+            border-radius: 3px !important;
+            padding: 0.8mm 0.5mm !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            justify-content: center !important;
             text-align: center !important;
-            break-inside: avoid !important;
             page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
           }
         }
       `}</style>
@@ -230,29 +279,38 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
       {/* Exact 42 codes (6 x 7) on 1 single page with dashed lines  */}
       {/* ========================================================= */}
       <div id="findix-factory-print-sheet" className="hidden print:block bg-white text-black p-0 m-0">
-        
-        {/* Minimal Factory Sheet Single-Line Header (Under 4mm height) */}
-        <div className="text-[8px] font-mono text-black border-b border-black pb-0.5 mb-1 flex items-center justify-between" style={{ height: '3.5mm' }}>
-          <div className="font-bold tracking-wider">
-            FINDIX PRODUCTION FACTORY SHEET · 42 CODES (6 × 7) · {batchCode}
-          </div>
-          <div>
-            TOTAL: {tags.length} UNITS · {new Date().toLocaleDateString()}
-          </div>
-        </div>
-
-        {/* The 6 x 7 Printable Grid */}
-        <div className="findix-print-grid-42">
-          {tags.map((tag, idx) => (
-            <div key={tag._id || tag.qrSlug || idx} className="print-card-item">
-              <PrintCardItem
-                tag={tag}
-                isPrintMode={true}
-              />
+        {tagChunks.map((chunk, pageIdx) => (
+          <div 
+            key={pageIdx} 
+            className="findix-a4-page-sheet"
+            style={{ 
+              pageBreakAfter: pageIdx < tagChunks.length - 1 ? 'always' : 'auto',
+              breakAfter: pageIdx < tagChunks.length - 1 ? 'page' : 'auto' 
+            }}
+          >
+            {/* Minimal Factory Sheet Single-Line Header (Under 4mm height) */}
+            <div className="print-sheet-header">
+              <div className="font-bold tracking-wider text-[7.5px]">
+                FINDIX FACTORY PRODUCTION SHEET · 42 CODES (6 × 7) · {batchCode}
+              </div>
+              <div className="text-[7px]">
+                TOTAL: {tags.length} UNITS · SHEET {pageIdx + 1} OF {tagChunks.length} · {new Date().toLocaleDateString()}
+              </div>
             </div>
-          ))}
-        </div>
 
+            {/* The 6 x 7 Printable Grid */}
+            <div className="findix-print-grid-42">
+              {chunk.map((tag, idx) => (
+                <div key={tag._id || tag.qrSlug || idx} className="print-card-item">
+                  <PrintCardItem
+                    tag={tag}
+                    isPrintMode={true}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );
@@ -260,8 +318,8 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
 /**
  * Individual QR Card Item calibrated for 42 codes per A4 page (6 x 7):
- * - Sharp QR code (25mm x 25mm)
- * - Alphanumeric Code (e.g. FDX-8XNR-3CKX)
+ * - Sharp QR code (23mm x 23mm)
+ * - Alphanumeric Code with tight vertical spacing (FDX-KC01-0001)
  * - SCAN TO RETURN
  * - Light dashed cutting line (NO solid black border!)
  */
@@ -275,13 +333,36 @@ const PrintCardItem = ({
   // High-resolution crisp QR code
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&margin=1`;
 
+  if (isPrintMode) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center text-center p-0 m-0 text-black bg-white select-none">
+        {/* High-Resolution QR Graphic (23mm x 23mm) */}
+        <div className="w-[23mm] h-[23mm] flex items-center justify-center shrink-0">
+          <img
+            src={qrImageSrc}
+            alt={tag.qrSlug}
+            className="w-full h-full object-contain filter contrast-200"
+            style={{ imageRendering: 'pixelated' }}
+            loading="eager"
+          />
+        </div>
+
+        {/* Minimal tight space between QR and alphanumeric code */}
+        <div className="w-full text-center mt-[0.8mm] leading-none shrink-0">
+          <div className="font-mono font-black text-[7.5pt] tracking-tight text-black leading-none">
+            {tag.qrSlug}
+          </div>
+          <div className="font-mono uppercase font-bold tracking-wider text-[5pt] text-black leading-none mt-[0.5mm]">
+            SCAN TO RETURN
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`relative bg-white text-black flex flex-col items-center justify-between text-center transition-all ${
-        isPrintMode
-          ? 'w-full h-full p-0.5'
-          : 'p-2 aspect-[1/1.18] border border-dashed border-slate-300 rounded-lg shadow-2xs hover:border-cyan-600'
-      }`}
+      className="relative bg-white text-black flex flex-col items-center justify-center text-center p-2 rounded-lg border border-dashed border-slate-300 shadow-2xs hover:border-cyan-600 transition-all"
       style={{
         boxSizing: 'border-box',
         backgroundColor: '#FFFFFF',
@@ -289,7 +370,7 @@ const PrintCardItem = ({
       }}
     >
       {/* High-Resolution QR Graphic */}
-      <div className={`${isPrintMode ? 'w-[25mm] h-[25mm]' : 'w-16 h-16 sm:w-20 sm:h-20'} flex items-center justify-center p-0.5 mx-auto`}>
+      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center p-0.5 mx-auto shrink-0">
         <img
           src={qrImageSrc}
           alt={tag.qrSlug}
@@ -300,17 +381,17 @@ const PrintCardItem = ({
       </div>
 
       {/* Alphanumeric Code & SCAN TO RETURN */}
-      <div className="w-full text-center leading-tight">
-        <div className={`font-mono font-black tracking-tight text-black ${isPrintMode ? 'text-[7.5px]' : 'text-[10px]'}`}>
+      <div className="w-full text-center mt-1 leading-tight shrink-0">
+        <div className="font-mono font-black text-[10px] tracking-tight text-black">
           {tag.qrSlug}
         </div>
-        <div className={`font-mono uppercase font-bold tracking-wider text-black ${isPrintMode ? 'text-[6px]' : 'text-[8px]'}`}>
+        <div className="font-mono uppercase font-bold tracking-wider text-[8px] text-slate-600 mt-0.5">
           SCAN TO RETURN
         </div>
       </div>
 
       {/* Copy Button (Only on screen preview, NEVER in print) */}
-      {!isPrintMode && onCopy && (
+      {onCopy && (
         <button
           type="button"
           onClick={onCopy}

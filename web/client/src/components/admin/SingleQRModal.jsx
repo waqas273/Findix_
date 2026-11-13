@@ -184,3 +184,4 @@ export const SingleQRModal = ({ isOpen, onClose, tag }) => {
 };
 
 export default SingleQRModal;
+

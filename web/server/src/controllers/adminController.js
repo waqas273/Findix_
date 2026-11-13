@@ -76,26 +76,62 @@ export const getGlobalMetrics = async (req, res) => {
 
 
 /**
- * @desc    Bulk generate cryptographic QR tags in 'unclaimed' status
+ * @desc    Bulk generate cryptographic QR tags in 'unclaimed' status with sequential identifiers
  * @route   POST /api/admin/qr/bulk
  * @access  Private (Admin)
  */
 export const bulkGenerateQRTags = async (req, res) => {
   try {
     const { batchSize = 42, categoryTag = 'Laser Metal Keychain', batchRef = '', notes = '' } = req.body;
+    
+    // 1. Compulsory Validations
+    if (!batchRef || !batchRef.trim()) {
+      return errorResponse(res, 400, 'Batch Reference is compulsory! Please enter a unique batch code.');
+    }
+    if (!notes || !notes.trim()) {
+      return errorResponse(res, 400, 'Production Notes are compulsory! Please enter production details.');
+    }
+
     const count = Math.min(1000, Math.max(1, parseInt(batchSize, 10) || 42));
     const normalizedType = categoryTag.toLowerCase().includes('sticker') ? 'sticker' : 'keychain';
+    const typeCode = normalizedType === 'sticker' ? 'ST' : 'KC';
     
-    // Batch Reference is compulsory! If provided, sanitize; otherwise generate default
-    const batchId = (batchRef && batchRef.trim())
-      ? batchRef.trim().toUpperCase().replace(/[^A-Z0-9\-_]/g, '')
-      : `BATCH-${normalizedType.toUpperCase()}-${Date.now()}`;
+    // 2. Sanitize Batch Reference
+    const batchId = batchRef.trim().toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
+
+    // 3. Extract short batch identifier for sequential QR references
+    // Examples: BATCH-KC-20261113-001 -> KC01, BATCH-ST-20261113-002 -> ST02
+    const lastDigitsMatch = batchId.match(/(\d+)$/);
+    const seqSuffix = lastDigitsMatch ? lastDigitsMatch[1].slice(-2).padStart(2, '0') : '01';
+    const shortBatch = `${typeCode}${seqSuffix}`;
+
+    // 4. Starting sequence within this batch
+    let startingIndex = 1;
+    if (mongoose.connection.readyState === 1) {
+      const existingInBatch = await QRItem.countDocuments({ batchId });
+      startingIndex = existingInBatch + 1;
+    } else {
+      const existingInBatch = simulatedManufacturedTags.filter((t) => t.batchId === batchId).length;
+      startingIndex = existingInBatch + 1;
+    }
 
     const newSlugs = [];
     const newTagDocuments = [];
 
     for (let i = 0; i < count; i++) {
-      const slug = generateQrSlug('FDX', 8);
+      const unitIndex = startingIndex + i;
+      const paddedUnit = String(unitIndex).padStart(4, '0'); // e.g. 0001, 0002 ... 0042
+      let slug = `FDX-${shortBatch}-${paddedUnit}`;
+
+      // Ensure absolute uniqueness if previously generated
+      if (mongoose.connection.readyState === 1) {
+        const collision = await QRItem.exists({ qrSlug: slug });
+        if (collision) {
+          const randSuffix = Math.floor(10 + Math.random() * 90);
+          slug = `FDX-${shortBatch}-${paddedUnit}-${randSuffix}`;
+        }
+      }
+
       newSlugs.push({
         qrSlug: slug,
         qrUrl: `https://findix.pk/q/${slug}`,
@@ -111,7 +147,7 @@ export const bulkGenerateQRTags = async (req, res) => {
         status: 'unclaimed',
         productType: normalizedType,
         batchId,
-        manufactureNotes: notes || `${categoryTag} Factory Batch`,
+        manufactureNotes: notes.trim(),
         privacySettings: {
           showName: true,
           showPhone: false,
@@ -125,18 +161,18 @@ export const bulkGenerateQRTags = async (req, res) => {
       try {
         await QRItem.insertMany(newTagDocuments, { ordered: false });
       } catch (insertErr) {
-        console.warn('Some duplicate slugs skipped during bulk insert:', insertErr.message);
+        console.warn('Duplicate slugs skipped during bulk insert:', insertErr.message);
       }
     }
 
     simulatedManufacturedTags = [...newSlugs, ...simulatedManufacturedTags];
 
-    return successResponse(res, 201, `Successfully generated ${count} cryptographic QR tags for ${categoryTag}`, {
+    return successResponse(res, 201, `Successfully generated ${count} sequential QR tags for ${categoryTag} in batch ${batchId}`, {
       batchId,
       batchSize: count,
       productType: normalizedType,
       categoryTag,
-      notes,
+      notes: notes.trim(),
       generatedCount: newSlugs.length,
       sampleSlugs: newSlugs.slice(0, 10),
       allSlugs: newSlugs,
