@@ -3,6 +3,8 @@ import {
   getGlobalMetrics, 
   bulkGenerateQRTags, 
   getAllTags, 
+  getTagBatchesAdmin,
+  deleteBatchAdmin,
   deleteTagAdmin,
   bulkDeleteTagsAdmin,
   getAllOrdersAdmin, 
@@ -36,6 +38,8 @@ router.patch('/users/:id/role', updateUserRoleAdmin);
 router.get('/metrics', getGlobalMetrics);
 router.post('/qr/bulk', bulkGenerateQRTags);
 router.get('/qr/tags', getAllTags);
+router.get('/qr/batches', getTagBatchesAdmin);
+router.delete('/qr/batches/:batchId', deleteBatchAdmin);
 router.delete('/qr/tags/:id', deleteTagAdmin);
 router.post('/qr/tags/bulk-delete', bulkDeleteTagsAdmin);
 

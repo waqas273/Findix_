@@ -31,7 +31,9 @@ import {
   Eye,
   Check,
   Radio,
-  Tag
+  Tag,
+  X,
+  Boxes
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -42,6 +44,7 @@ import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { AdminProductModal } from '../components/admin/AdminProductModal';
 import { AdminPrintSheetModal } from '../components/admin/AdminPrintSheetModal';
+import { SingleQRModal } from '../components/admin/SingleQRModal';
 
 export const AdminPage = () => {
   const { user, token } = useAuth();
@@ -81,9 +84,24 @@ export const AdminPage = () => {
   });
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
+  // Helper to auto-generate standardized unique batch reference
+  const generateDefaultBatchRef = (category) => {
+    const code = category?.toLowerCase().includes('sticker') ? 'STICKER' : 'KEYCHAIN';
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const rand = Math.floor(10 + Math.random() * 90);
+    return `BATCH-${code}-${dateStr}-${rand}`;
+  };
+
   // -------------------------------------------------------------
   // QR Production (Factory) State
   // -------------------------------------------------------------
+  const [qrSubTab, setQrSubTab] = useState('batches'); // 'batches' | 'tags'
+  const [batchesList, setBatchesList] = useState([]);
+  const [loadingBatches, setLoadingBatches] = useState(false);
+  const [batchRefInput, setBatchRefInput] = useState(() => generateDefaultBatchRef('Laser Metal Keychain'));
+  const [selectedBatchFilter, setSelectedBatchFilter] = useState('all');
+  const [inspectTag, setInspectTag] = useState(null);
+
   const [tagsList, setTagsList] = useState([]);
   const [loadingTags, setLoadingTags] = useState(false);
   const [qrCategory, setQrCategory] = useState('Laser Metal Keychain');
@@ -142,13 +160,37 @@ export const AdminPage = () => {
     }
   };
 
+  // Fetch Batches Aggregated
+  const fetchBatches = async () => {
+    setLoadingBatches(true);
+    try {
+      const res = await fetch('/api/admin/qr/batches', {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setBatchesList(json.data || []);
+      }
+    } catch (e) {
+      console.warn('Batches fetch fallback', e);
+    } finally {
+      setLoadingBatches(false);
+    }
+  };
+
   // Fetch Tags (Factory Inventory)
-  const fetchTags = async () => {
+  const fetchTags = async (batchOverride) => {
     setLoadingTags(true);
     try {
       const queryParams = new URLSearchParams({ limit: '100' });
       if (tagStatusFilter !== 'all') queryParams.append('status', tagStatusFilter);
       if (tagTypeFilter !== 'all') queryParams.append('productType', tagTypeFilter);
+      
+      const activeBatch = batchOverride !== undefined ? batchOverride : selectedBatchFilter;
+      if (activeBatch && activeBatch !== 'all') {
+        queryParams.append('batchId', activeBatch);
+      }
+
       if (tagSearch.trim()) queryParams.append('search', tagSearch.trim());
 
       const res = await fetch(`/api/admin/qr/tags?${queryParams.toString()}`, {
@@ -221,6 +263,7 @@ export const AdminPage = () => {
 
   useEffect(() => {
     fetchMetrics();
+    fetchBatches();
     fetchTags();
     fetchOrders();
     fetchProducts();
@@ -230,15 +273,20 @@ export const AdminPage = () => {
   // Refresh tags when filter changes
   useEffect(() => {
     fetchTags();
-  }, [tagStatusFilter, tagTypeFilter]);
+  }, [tagStatusFilter, tagTypeFilter, selectedBatchFilter]);
 
   // =============================================================
   // Action Handlers
   // =============================================================
 
-  // 1. Bulk Generate Dummy QR Codes
+  // 1. Bulk Generate Dummy QR Codes (Batch Reference is Compulsory)
   const handleBulkGenerate = async (e) => {
     e.preventDefault();
+    if (!batchRefInput.trim()) {
+      addToast('error', 'Batch Reference is compulsory! Please enter a unique batch code.');
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -249,17 +297,21 @@ export const AdminPage = () => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          batchSize: parseInt(batchSize, 10) || 25,
+          batchSize: parseInt(batchSize, 10) || 42,
           categoryTag: qrCategory,
+          batchRef: batchRefInput.trim(),
           notes: batchNotes || `Factory Batch for ${qrCategory}`,
         }),
       });
 
       if (res.ok) {
         const json = await res.json();
-        addToast('success', `Manufactured ${batchSize} unassigned QR tags for ${qrCategory}! Ready for physical printing.`);
+        addToast('success', `Manufactured ${batchSize} unassigned QR tags for batch "${batchRefInput.trim()}"! Stored in database.`);
         fetchTags();
+        fetchBatches();
         fetchMetrics();
+        // Generate new sequential default for next batch
+        setBatchRefInput(generateDefaultBatchRef(qrCategory));
         setBatchNotes('');
         
         // Auto-open print modal with generated batch
@@ -271,12 +323,74 @@ export const AdminPage = () => {
           setIsPrintModalOpen(true);
         }
       } else {
-        addToast('error', 'Failed to generate QR batch');
+        const errJson = await res.json();
+        addToast('error', errJson.message || 'Failed to generate QR batch');
       }
     } catch (err) {
       addToast('error', err.message || 'Error executing QR generation');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 1b. Print Specific Production Batch (Fetches All Codes in Batch)
+  const handlePrintBatch = async (batchId) => {
+    try {
+      addToast('info', `Loading tags for batch ${batchId}...`);
+      const res = await fetch(`/api/admin/qr/tags?batchId=${encodeURIComponent(batchId)}&limit=500`, {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const batchTags = json.data?.tags || [];
+        if (batchTags.length === 0) {
+          addToast('warning', `No tags found for batch ${batchId}`);
+          return;
+        }
+        setSelectedBatchForPrint({
+          batchId,
+          tags: batchTags,
+        });
+        setIsPrintModalOpen(true);
+      } else {
+        addToast('error', 'Failed to load batch tags for printing');
+      }
+    } catch (e) {
+      addToast('error', 'Error loading batch for printing');
+    }
+  };
+
+  // 1c. Delete Entire Dummy Batch
+  const handleDeleteBatch = async (batchId, unclaimedCount) => {
+    const isConfirmed = await confirm({
+      title: 'Delete Production Batch',
+      message: `Are you sure you want to delete dummy batch "${batchId}"? This will permanently delete all ${unclaimedCount} unclaimed QR codes in this batch from the database. Claimed buyer tags (if any) will NOT be affected.`,
+      confirmText: `Delete Batch (${unclaimedCount} tags)`,
+      cancelText: 'Cancel',
+      variant: 'danger',
+      iconType: 'trash',
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/admin/qr/batches/${encodeURIComponent(batchId)}`, {
+        method: 'DELETE',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        addToast('success', json.message || `Deleted batch ${batchId}`);
+        fetchBatches();
+        fetchTags();
+        fetchMetrics();
+      } else {
+        const json = await res.json();
+        addToast('error', json.message || 'Failed to delete batch');
+      }
+    } catch (e) {
+      addToast('error', 'Error deleting batch');
     }
   };
 
@@ -792,7 +906,11 @@ export const AdminPage = () => {
                 <label className="text-xs font-semibold text-slate-700">Target Product</label>
                 <select
                   value={qrCategory}
-                  onChange={(e) => setQrCategory(e.target.value)}
+                  onChange={(e) => {
+                    const newCat = e.target.value;
+                    setQrCategory(newCat);
+                    setBatchRefInput(generateDefaultBatchRef(newCat));
+                  }}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
                 >
                   <option value="Laser Metal Keychain">Laser Metal Keychain</option>
@@ -816,7 +934,22 @@ export const AdminPage = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Batch Reference / Notes</label>
+                <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Batch Reference <span className="text-red-500 font-bold">*</span></span>
+                  <span className="text-[10px] text-cyan-700 font-mono font-bold">Compulsory</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. BATCH-KEYCHAIN-20261113-01"
+                  value={batchRefInput}
+                  onChange={(e) => setBatchRefInput(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-cyan-600"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">Production Notes (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Islamabad Direct Stock Drop"
@@ -826,301 +959,572 @@ export const AdminPage = () => {
                 />
               </div>
 
-              <Button
-                type="submit"
-                variant="primary"
-                size="md"
-                isLoading={isGenerating}
-                className="font-bold shadow-md w-full bg-cyan-600 hover:bg-cyan-700"
-              >
-                <Sparkles className="w-4 h-4 mr-1.5" />
-                <span>Manufacture QR Batch</span>
-              </Button>
+              <div className="sm:col-span-4 flex items-center justify-between pt-1 border-t border-slate-100 flex-wrap gap-2">
+                <div className="text-[11px] text-slate-500 font-mono">
+                  Exact A4 Print Standard: 42 codes (6 × 7 grid) per page · Light dashed cutting lines · Database persistent
+                </div>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  isLoading={isGenerating}
+                  className="font-bold shadow-md bg-cyan-600 hover:bg-cyan-700 w-full sm:w-auto px-6"
+                >
+                  <Sparkles className="w-4 h-4 mr-1.5" />
+                  <span>Manufacture QR Batch ({batchSize} Codes)</span>
+                </Button>
+              </div>
             </form>
           </Card>
 
-          {/* Manufactured QR Inventory Table */}
-          <Card className="p-6 bg-white border-slate-200 shadow-md space-y-4">
-            
-            {/* Filter & Search Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-slate-700">Filter Lifecycle:</span>
-                
-                <button
-                  type="button"
-                  onClick={() => setTagStatusFilter('all')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    tagStatusFilter === 'all'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  All Tags
-                </button>
+          {/* Sub-Navigation Switcher: Batches vs Individual Tags */}
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2 flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setQrSubTab('batches')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  qrSubTab === 'batches'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-cyan-400" />
+                <span>Production Batches ({batchesList.length})</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => setTagStatusFilter('unclaimed')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    tagStatusFilter === 'unclaimed'
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-                  }`}
-                >
-                  Dummy / Ready to Print
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTagStatusFilter('claimed')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    tagStatusFilter === 'claimed'
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                  }`}
-                >
-                  Claimed by Buyer
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTagStatusFilter('lost')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    tagStatusFilter === 'lost'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                  }`}
-                >
-                  Emergency Lost Mode
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <select
-                  value={tagTypeFilter}
-                  onChange={(e) => setTagTypeFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-700 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
-                >
-                  <option value="all">All Products</option>
-                  <option value="keychain">Keychains</option>
-                  <option value="sticker">Stickers</option>
-                </select>
-
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search slug, owner, item..."
-                    value={tagSearch}
-                    onChange={(e) => setTagSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && fetchTags()}
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600"
-                  />
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setQrSubTab('tags');
+                  setSelectedBatchFilter('all');
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  qrSubTab === 'tags'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <QrCode className="w-4 h-4 text-cyan-400" />
+                <span>All Individual Tags ({tagsList.length})</span>
+              </button>
             </div>
 
-            {/* Multi-Select Floating Bulk Actions Bar */}
-            {selectedTagIds.length > 0 && (
-              <div className="p-3 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl animate-fade-in border border-slate-700">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
-                  <span className="text-xs font-mono font-bold tracking-wide">
-                    {selectedTagIds.length} dummy tags selected
-                  </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => {
+                  fetchBatches();
+                  fetchTags();
+                  addToast('info', 'Refreshed QR inventory');
+                }}
+                className="text-xs text-slate-600 border-slate-300"
+              >
+                <RefreshCw className="w-3.5 h-3.5 mr-1 text-cyan-600" />
+                <span>Refresh</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* ========================================================= */}
+          {/* SUB-VIEW 1: PRODUCTION BATCHES TABLE                      */}
+          {/* ========================================================= */}
+          {qrSubTab === 'batches' && (
+            <Card className="p-6 bg-white border-slate-200 shadow-md space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Boxes className="w-4 h-4 text-cyan-600" />
+                    <span>Manufactured Batches Registry</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Grouped production runs. Print entire batch A4 sheets, export laser CSVs, or manage dummy stock.
+                  </p>
+                </div>
+
+                <div className="text-xs font-mono text-slate-500">
+                  Total Batches: <strong className="text-slate-900">{batchesList.length}</strong>
+                </div>
+              </div>
+
+              {loadingBatches ? (
+                <div className="space-y-2 py-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-14 rounded-xl bg-slate-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : batchesList.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs space-y-2">
+                  <Boxes className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="font-semibold text-slate-700">No production batches found.</p>
+                  <p className="text-slate-400">Manufacture your first physical batch above using the QR Fabricator.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-slate-200 text-slate-500 uppercase font-mono text-[10px]">
+                      <tr>
+                        <th className="py-2.5 px-3">Batch Reference</th>
+                        <th className="py-2.5 px-3">Hardware Product</th>
+                        <th className="py-2.5 px-3">Batch Units &amp; A4 Sheets</th>
+                        <th className="py-2.5 px-3">Stock Breakdown</th>
+                        <th className="py-2.5 px-3">Created / Notes</th>
+                        <th className="py-2.5 px-3 text-right">Batch Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {batchesList.map((batch) => {
+                        const totalUnits = batch.totalCount || 0;
+                        const sheetsCount = Math.ceil(totalUnits / 42) || 1;
+                        const unclaimed = batch.unclaimedCount || 0;
+                        const claimed = batch.claimedCount || 0;
+                        const lost = batch.lostCount || 0;
+
+                        return (
+                          <tr key={batch._id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3.5 px-3">
+                              <div className="font-mono font-black text-cyan-800 text-xs flex items-center gap-1.5">
+                                <Tag className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+                                <span>{batch._id}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                                Standard Fabricator Run
+                              </span>
+                            </td>
+
+                            <td className="py-3.5 px-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                                batch.productType === 'sticker'
+                                  ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                {batch.productType === 'sticker' ? 'Weatherproof Sticker' : 'Laser Keychain'}
+                              </span>
+                            </td>
+
+                            <td className="py-3.5 px-3">
+                              <div className="font-bold text-slate-900">
+                                {totalUnits} Codes
+                              </div>
+                              <div className="text-[10px] text-slate-500 font-mono">
+                                ≈ {sheetsCount} {sheetsCount === 1 ? 'A4 Sheet (42/pg)' : 'A4 Sheets'}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200" title="Dummy codes ready to print">
+                                  {unclaimed} Dummy
+                                </span>
+                                {claimed > 0 && (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" title="Claimed by buyer">
+                                    {claimed} Claimed
+                                  </span>
+                                )}
+                                {lost > 0 && (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200" title="Lost items">
+                                    {lost} Lost
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-3 text-slate-600">
+                              <div className="text-[11px] text-slate-500 font-mono">
+                                {batch.createdAt ? new Date(batch.createdAt).toLocaleDateString() : 'Recent'}
+                              </div>
+                              <div className="text-xs text-slate-700 truncate max-w-[200px]" title={batch.manufactureNotes}>
+                                {batch.manufactureNotes || '—'}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  variant="primary"
+                                  size="xs"
+                                  onClick={() => handlePrintBatch(batch._id)}
+                                  className="bg-cyan-600 hover:bg-cyan-700 font-bold text-xs shadow-2xs"
+                                  title="Print 42-code A4 Sheets for this Batch"
+                                >
+                                  <Printer className="w-3 h-3 mr-1" />
+                                  <span>Print Sheet</span>
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  size="xs"
+                                  onClick={() => {
+                                    setSelectedBatchFilter(batch._id);
+                                    setQrSubTab('tags');
+                                  }}
+                                  className="text-xs border-slate-300 text-slate-700 hover:bg-slate-100"
+                                  title="View individual codes in this batch"
+                                >
+                                  <Eye className="w-3 h-3 mr-1 text-slate-500" />
+                                  <span>Codes</span>
+                                </Button>
+
+                                {unclaimed > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteBatch(batch._id, unclaimed)}
+                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Delete batch (unclaimed dummy tags only)"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* ========================================================= */}
+          {/* SUB-VIEW 2: INDIVIDUAL TAGS TABLE WITH DIRECT QR PREVIEW  */}
+          {/* ========================================================= */}
+          {qrSubTab === 'tags' && (
+            <Card className="p-6 bg-white border-slate-200 shadow-md space-y-4">
+              
+              {/* Filter & Search Bar */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-slate-700">Filter Lifecycle:</span>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setTagStatusFilter('all')}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      tagStatusFilter === 'all'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    All Tags
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTagStatusFilter('unclaimed')}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      tagStatusFilter === 'unclaimed'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                    }`}
+                  >
+                    Dummy / Ready to Print
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTagStatusFilter('claimed')}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      tagStatusFilter === 'claimed'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    Claimed by Buyer
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTagStatusFilter('lost')}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      tagStatusFilter === 'lost'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                    }`}
+                  >
+                    Emergency Lost Mode
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    variant="primary"
-                    size="xs"
-                    onClick={() => {
-                      const selectedTags = tagsList.filter((t) => selectedTagIds.includes(t._id || t.qrSlug));
-                      setSelectedBatchForPrint({ batchId: `SELECTED-${selectedTagIds.length}`, tags: selectedTags });
-                      setIsPrintModalOpen(true);
-                    }}
-                    className="bg-cyan-600 hover:bg-cyan-500 font-bold shadow-xs text-xs"
+                  {/* Batch Filter Dropdown */}
+                  <select
+                    value={selectedBatchFilter}
+                    onChange={(e) => setSelectedBatchFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-700 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
                   >
-                    <Printer className="w-3.5 h-3.5 mr-1" />
-                    <span>Print Selected ({selectedTagIds.length})</span>
-                  </Button>
+                    <option value="all">All Batches</option>
+                    {batchesList.map((b) => (
+                      <option key={b._id} value={b._id}>
+                        {b._id} ({b.totalCount} units)
+                      </option>
+                    ))}
+                  </select>
 
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={() => {
-                      const selectedTags = tagsList.filter((t) => selectedTagIds.includes(t._id || t.qrSlug));
-                      handleExportCSV(selectedTags);
-                    }}
-                    className="border-slate-700 text-slate-200 hover:bg-slate-800 text-xs"
+                  {/* Product Filter Dropdown */}
+                  <select
+                    value={tagTypeFilter}
+                    onChange={(e) => setTagTypeFilter(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-700 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5 mr-1 text-slate-300" />
-                    <span>Export CSV</span>
-                  </Button>
+                    <option value="all">All Products</option>
+                    <option value="keychain">Keychains</option>
+                    <option value="sticker">Stickers</option>
+                  </select>
 
-                  <Button
-                    variant="danger"
-                    size="xs"
-                    onClick={handleBulkDeleteTags}
-                    className="bg-red-600 hover:bg-red-500 font-bold text-white shadow-xs text-xs"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1" />
-                    <span>Delete Selected ({selectedTagIds.length})</span>
-                  </Button>
-
-                  <button
-                    onClick={() => setSelectedTagIds([])}
-                    className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer ml-1"
-                    title="Deselect All"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  {/* Search Input */}
+                  <div className="relative w-full sm:w-56">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search slug, owner, item..."
+                      value={tagSearch}
+                      onChange={(e) => setTagSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && fetchTags()}
+                      className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600"
+                    />
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Tags Table */}
-            {loadingTags ? (
-              <div className="space-y-2 py-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-12 rounded-xl bg-slate-100 animate-pulse" />
-                ))}
-              </div>
-            ) : tagsList.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-xs space-y-2">
-                <QrCode className="w-8 h-8 text-slate-300 mx-auto" />
-                <p>No QR tags found matching your filter criteria.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-slate-200 text-slate-500 uppercase font-mono text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-3 w-8">
-                        <input
-                          type="checkbox"
-                          checked={allDummySelected}
-                          onChange={handleToggleSelectAll}
-                          disabled={dummyTagsOnPage.length === 0}
-                          title={allDummySelected ? 'Deselect All Dummy Tags' : 'Select All Dummy Tags'}
-                          className="w-4 h-4 rounded text-cyan-600 border-slate-300 focus:ring-0 cursor-pointer disabled:opacity-40"
-                        />
-                      </th>
-                      <th className="py-2.5 px-3">Cryptographic Identifier</th>
-                      <th className="py-2.5 px-3">Product Type</th>
-                      <th className="py-2.5 px-3">Lifecycle State</th>
-                      <th className="py-2.5 px-3">Bound Asset Name</th>
-                      <th className="py-2.5 px-3">Registered Buyer / Owner</th>
-                      <th className="py-2.5 px-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {tagsList.map((tag) => {
-                      const isDummy = tag.status === 'unclaimed';
-                      const isSelected = selectedTagIds.includes(tag._id || tag.qrSlug);
+              {/* Active Filter Notification Bar */}
+              {selectedBatchFilter !== 'all' && (
+                <div className="p-2.5 px-3 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-between text-xs text-cyan-900 animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5 text-cyan-600" />
+                    <span>Filtered by Batch: <strong className="font-mono">{selectedBatchFilter}</strong></span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedBatchFilter('all')}
+                    className="font-bold text-cyan-700 hover:text-cyan-900 hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Clear Filter</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
 
-                      return (
-                        <tr 
-                          key={tag._id || tag.qrSlug} 
-                          className={`transition-colors ${isSelected ? 'bg-cyan-50/50' : 'hover:bg-slate-50/80'}`}
-                        >
-                          <td className="py-3 px-3 w-8">
-                            {isDummy ? (
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleToggleSelectTag(tag._id || tag.qrSlug)}
-                                className="w-4 h-4 rounded text-cyan-600 border-slate-300 focus:ring-0 cursor-pointer"
-                              />
-                            ) : (
-                              <span className="w-4 h-4 block text-slate-300 text-center select-none" title="Claimed buyer tags cannot be deleted">•</span>
-                            )}
-                          </td>
+              {/* Multi-Select Floating Bulk Actions Bar */}
+              {selectedTagIds.length > 0 && (
+                <div className="p-3 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl animate-fade-in border border-slate-700">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                    <span className="text-xs font-mono font-bold tracking-wide">
+                      {selectedTagIds.length} dummy tags selected
+                    </span>
+                  </div>
 
-                          <td className="py-3 px-3">
-                            <div className="font-mono font-black text-cyan-700 text-xs">
-                              {tag.qrSlug}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
-                              {tag.batchId || 'Factory Standard'}
-                            </div>
-                          </td>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      variant="primary"
+                      size="xs"
+                      onClick={() => {
+                        const selectedTags = tagsList.filter((t) => selectedTagIds.includes(t._id || t.qrSlug));
+                        setSelectedBatchForPrint({ batchId: `SELECTED-${selectedTagIds.length}`, tags: selectedTags });
+                        setIsPrintModalOpen(true);
+                      }}
+                      className="bg-cyan-600 hover:bg-cyan-500 font-bold shadow-xs text-xs"
+                    >
+                      <Printer className="w-3.5 h-3.5 mr-1" />
+                      <span>Print Selected ({selectedTagIds.length})</span>
+                    </Button>
 
-                          <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                              tag.productType === 'sticker'
-                                ? 'bg-teal-50 text-teal-700 border border-teal-200'
-                                : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}>
-                              {tag.productType === 'sticker' ? 'Sticker Pack' : 'Metal Keychain'}
-                            </span>
-                          </td>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => {
+                        const selectedTags = tagsList.filter((t) => selectedTagIds.includes(t._id || t.qrSlug));
+                        handleExportCSV(selectedTags);
+                      }}
+                      className="border-slate-700 text-slate-200 hover:bg-slate-800 text-xs"
+                    >
+                      <Download className="w-3.5 h-3.5 mr-1 text-slate-300" />
+                      <span>Export CSV</span>
+                    </Button>
 
-                          <td className="py-3 px-3">
-                            {tag.isLost ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
-                                ● LOST MODE ACTIVE
-                              </span>
-                            ) : tag.status === 'claimed' ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                ✓ CLAIMED & BOUND
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                ○ DUMMY (WAITING BUYER)
-                              </span>
-                            )}
-                          </td>
+                    <Button
+                      variant="danger"
+                      size="xs"
+                      onClick={handleBulkDeleteTags}
+                      className="bg-red-600 hover:bg-red-500 font-bold text-white shadow-xs text-xs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      <span>Delete Selected ({selectedTagIds.length})</span>
+                    </Button>
 
-                          <td className="py-3 px-3 font-semibold text-slate-900">
-                            {tag.itemName || '—'}
-                          </td>
+                    <button
+                      onClick={() => setSelectedTagIds([])}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer ml-1"
+                      title="Deselect All"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                          <td className="py-3 px-3 text-slate-600">
-                            {tag.ownerId?.email ? (
-                              <div>
-                                <span className="font-medium text-slate-900">{tag.ownerId.name || 'Owner'}</span>
-                                <span className="text-[11px] text-slate-500 block">{tag.ownerId.email}</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 italic">Unassigned (Retail)</span>
-                            )}
-                          </td>
+              {/* Tags Table */}
+              {loadingTags ? (
+                <div className="space-y-2 py-6">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-12 rounded-xl bg-slate-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : tagsList.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs space-y-2">
+                  <QrCode className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p>No QR tags found matching your filter criteria.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-slate-200 text-slate-500 uppercase font-mono text-[10px]">
+                      <tr>
+                        <th className="py-2.5 px-3 w-8">
+                          <input
+                            type="checkbox"
+                            checked={allDummySelected}
+                            onChange={handleToggleSelectAll}
+                            disabled={dummyTagsOnPage.length === 0}
+                            title={allDummySelected ? 'Deselect All Dummy Tags' : 'Select All Dummy Tags'}
+                            className="w-4 h-4 rounded text-cyan-600 border-slate-300 focus:ring-0 cursor-pointer disabled:opacity-40"
+                          />
+                        </th>
+                        <th className="py-2.5 px-3">Cryptographic Identifier (Click to View QR)</th>
+                        <th className="py-2.5 px-3">Product Type</th>
+                        <th className="py-2.5 px-3">Lifecycle State</th>
+                        <th className="py-2.5 px-3">Bound Asset Name</th>
+                        <th className="py-2.5 px-3">Registered Buyer / Owner</th>
+                        <th className="py-2.5 px-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tagsList.map((tag) => {
+                        const isDummy = tag.status === 'unclaimed';
+                        const isSelected = selectedTagIds.includes(tag._id || tag.qrSlug);
 
-                          <td className="py-3 px-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <a
-                                href={`/q/${tag.qrSlug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-cyan-700 hover:text-cyan-800 font-bold text-xs"
-                                title="Open public scan resolution test"
+                        return (
+                          <tr 
+                            key={tag._id || tag.qrSlug} 
+                            className={`transition-colors ${isSelected ? 'bg-cyan-50/50' : 'hover:bg-slate-50/80'}`}
+                          >
+                            <td className="py-3 px-3 w-8">
+                              {isDummy ? (
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleToggleSelectTag(tag._id || tag.qrSlug)}
+                                  className="w-4 h-4 rounded text-cyan-600 border-slate-300 focus:ring-0 cursor-pointer"
+                                />
+                              ) : (
+                                <span className="w-4 h-4 block text-slate-300 text-center select-none" title="Claimed buyer tags cannot be deleted">•</span>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3">
+                              {/* Clickable Code that directly displays QR Modal */}
+                              <button
+                                type="button"
+                                onClick={() => setInspectTag(tag)}
+                                className="font-mono font-black text-cyan-700 hover:text-cyan-900 hover:underline flex items-center gap-1.5 cursor-pointer text-left group"
+                                title="Click to view QR code"
                               >
-                                <span>Test Scan</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
+                                <Eye className="w-3.5 h-3.5 text-cyan-500 group-hover:text-cyan-700 transition-colors" />
+                                <span>{tag.qrSlug}</span>
+                              </button>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                {tag.batchId || 'Factory Standard'}
+                              </div>
+                            </td>
 
-                              {isDummy && (
+                            <td className="py-3 px-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                                tag.productType === 'sticker'
+                                  ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                {tag.productType === 'sticker' ? 'Sticker Pack' : 'Metal Keychain'}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-3">
+                              {tag.isLost ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
+                                  ● LOST MODE ACTIVE
+                                </span>
+                              ) : tag.status === 'claimed' ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  ✓ CLAIMED &amp; BOUND
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  ○ DUMMY (WAITING BUYER)
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3 font-semibold text-slate-900">
+                              {tag.itemName || '—'}
+                            </td>
+
+                            <td className="py-3 px-3 text-slate-600">
+                              {tag.ownerId?.email ? (
+                                <div>
+                                  <span className="font-medium text-slate-900">{tag.ownerId.name || 'Owner'}</span>
+                                  <span className="text-[11px] text-slate-500 block">{tag.ownerId.email}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 italic">Unassigned (Retail)</span>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {/* Dedicated Clickable View QR Button */}
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteSingleTag(tag._id || tag.qrSlug, tag.qrSlug)}
-                                  className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Delete dummy tag"
+                                  onClick={() => setInspectTag(tag)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-cyan-50 text-cyan-700 hover:bg-cyan-100 font-bold text-[11px] transition-colors cursor-pointer"
+                                  title="View high-resolution QR"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <QrCode className="w-3 h-3 text-cyan-600" />
+                                  <span>View QR</span>
                                 </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Card>
+
+                                <a
+                                  href={`/q/${tag.qrSlug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-slate-600 hover:text-cyan-700 font-semibold text-[11px]"
+                                  title="Open public scan resolution test"
+                                >
+                                  <span>Test Scan</span>
+                                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                                </a>
+
+                                {isDummy && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSingleTag(tag._id || tag.qrSlug, tag.qrSlug)}
+                                    className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Delete dummy tag"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          )}
 
         </div>
       )}
@@ -1519,6 +1923,13 @@ export const AdminPage = () => {
         onClose={() => setIsPrintModalOpen(false)}
         tags={selectedBatchForPrint?.tags || tagsList}
         batchInfo={selectedBatchForPrint}
+      />
+
+      {/* 3. Single QR Inspection & Direct Preview Modal */}
+      <SingleQRModal
+        isOpen={Boolean(inspectTag)}
+        onClose={() => setInspectTag(null)}
+        tag={inspectTag}
       />
 
     </div>

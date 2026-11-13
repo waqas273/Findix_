@@ -82,10 +82,14 @@ export const getGlobalMetrics = async (req, res) => {
  */
 export const bulkGenerateQRTags = async (req, res) => {
   try {
-    const { batchSize = 50, categoryTag = 'Laser Metal Keychain', notes = '' } = req.body;
-    const count = Math.min(1000, Math.max(1, parseInt(batchSize, 10) || 50));
+    const { batchSize = 42, categoryTag = 'Laser Metal Keychain', batchRef = '', notes = '' } = req.body;
+    const count = Math.min(1000, Math.max(1, parseInt(batchSize, 10) || 42));
     const normalizedType = categoryTag.toLowerCase().includes('sticker') ? 'sticker' : 'keychain';
-    const batchId = `BATCH-${normalizedType.toUpperCase()}-${Date.now()}`;
+    
+    // Batch Reference is compulsory! If provided, sanitize; otherwise generate default
+    const batchId = (batchRef && batchRef.trim())
+      ? batchRef.trim().toUpperCase().replace(/[^A-Z0-9\-_]/g, '')
+      : `BATCH-${normalizedType.toUpperCase()}-${Date.now()}`;
 
     const newSlugs = [];
     const newTagDocuments = [];
@@ -150,7 +154,7 @@ export const bulkGenerateQRTags = async (req, res) => {
  */
 export const getAllTags = async (req, res) => {
   try {
-    const { status, productType, search, page = 1, limit = 100 } = req.query;
+    const { status, productType, batchId, search, page = 1, limit = 100 } = req.query;
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 100;
 
@@ -165,6 +169,9 @@ export const getAllTags = async (req, res) => {
       }
       if (productType && productType !== 'all') {
         query.productType = productType;
+      }
+      if (batchId && batchId !== 'all') {
+        query.batchId = batchId;
       }
       if (search) {
         query.$or = [
@@ -196,6 +203,9 @@ export const getAllTags = async (req, res) => {
     if (productType && productType !== 'all') {
       filtered = filtered.filter((t) => t.productType === productType);
     }
+    if (batchId && batchId !== 'all') {
+      filtered = filtered.filter((t) => t.batchId === batchId);
+    }
     if (search) {
       filtered = filtered.filter((t) => t.qrSlug.toLowerCase().includes(search.toLowerCase()));
     }
@@ -208,6 +218,101 @@ export const getAllTags = async (req, res) => {
     });
   } catch (error) {
     return errorResponse(res, 500, 'Failed to fetch tags', error.message);
+  }
+};
+
+/**
+ * @desc    Get all production batches aggregated
+ * @route   GET /api/admin/qr/batches
+ * @access  Private (Admin)
+ */
+export const getTagBatchesAdmin = async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const batches = await QRItem.aggregate([
+        {
+          $group: {
+            _id: { $ifNull: ['$batchId', 'UNASSIGNED-BATCH'] },
+            productType: { $first: '$productType' },
+            manufactureNotes: { $first: '$manufactureNotes' },
+            createdAt: { $min: '$createdAt' },
+            totalCount: { $sum: 1 },
+            unclaimedCount: {
+              $sum: { $cond: [{ $eq: ['$status', 'unclaimed'] }, 1, 0] },
+            },
+            claimedCount: {
+              $sum: { $cond: [{ $eq: ['$status', 'claimed'] }, 1, 0] },
+            },
+            lostCount: {
+              $sum: { $cond: [{ $eq: ['$isLost', true] }, 1, 0] },
+            },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+      ]);
+
+      return successResponse(res, 200, 'Batches aggregated successfully', batches);
+    }
+
+    // In-memory fallback
+    const map = {};
+    simulatedManufacturedTags.forEach((t) => {
+      const bId = t.batchId || 'UNASSIGNED-BATCH';
+      if (!map[bId]) {
+        map[bId] = {
+          _id: bId,
+          productType: t.productType || 'keychain',
+          manufactureNotes: t.notes || '',
+          createdAt: t.createdAt || new Date(),
+          totalCount: 0,
+          unclaimedCount: 0,
+          claimedCount: 0,
+          lostCount: 0,
+        };
+      }
+      map[bId].totalCount += 1;
+      if (t.status === 'unclaimed') map[bId].unclaimedCount += 1;
+      if (t.status === 'claimed') map[bId].claimedCount += 1;
+    });
+
+    return successResponse(res, 200, 'Batches aggregated successfully', Object.values(map));
+  } catch (error) {
+    return errorResponse(res, 500, 'Failed to fetch batches', error.message);
+  }
+};
+
+/**
+ * @desc    Delete all dummy (unclaimed) tags of an entire batch
+ * @route   DELETE /api/admin/qr/batches/:batchId
+ * @access  Private (Admin)
+ */
+export const deleteBatchAdmin = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    if (mongoose.connection.readyState === 1) {
+      const result = await QRItem.deleteMany({
+        batchId,
+        status: 'unclaimed',
+        $or: [{ ownerId: null }, { ownerId: { $exists: false } }],
+      });
+
+      return successResponse(res, 200, `Successfully deleted ${result.deletedCount} dummy tags from batch ${batchId}`, {
+        deletedCount: result.deletedCount,
+      });
+    }
+
+    const prevLen = simulatedManufacturedTags.length;
+    simulatedManufacturedTags = simulatedManufacturedTags.filter(
+      (t) => !(t.batchId === batchId && t.status === 'unclaimed')
+    );
+    const deletedCount = prevLen - simulatedManufacturedTags.length;
+
+    return successResponse(res, 200, `Deleted ${deletedCount} dummy tags from batch ${batchId}`, {
+      deletedCount,
+    });
+  } catch (error) {
+    return errorResponse(res, 500, 'Failed to delete batch', error.message);
   }
 };
 
