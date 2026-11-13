@@ -22,6 +22,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ defa
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Cyberpunk Suspense Page Loader
@@ -72,6 +73,7 @@ export function App() {
                     <Route path="/scan/:code" element={<PublicScanPage />} />
                     <Route path="/q/:qrSlug" element={<PublicScanPage />} />
                     <Route path="/q/:qrSlug/claim" element={<PublicScanPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
 
                     {/* Authentication Routes */}
                     <Route path="/login" element={<LoginPage />} />
