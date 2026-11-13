@@ -4,7 +4,7 @@ import { Mail } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="border-t border-slate-200 bg-white text-slate-600 text-xs pt-5 pb-32 md:py-3.5 transition-colors z-10">
+    <footer className="border-t border-slate-200 bg-white text-slate-600 text-xs pt-5 pb-32 md:py-3.5 transition-colors z-10 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Desktop View (>= sm): Sleek, single-row bar */}

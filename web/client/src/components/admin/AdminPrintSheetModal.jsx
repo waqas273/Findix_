@@ -1,14 +1,41 @@
-import React, { useState } from 'react';
-import { Printer, Download, X, QrCode, ExternalLink, Check, Copy, Tag, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Printer, 
+  Download, 
+  X, 
+  QrCode, 
+  Check, 
+  Copy, 
+  Sliders, 
+  Maximize2, 
+  Grid, 
+  Sparkles,
+  Layers
+} from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = null }) => {
-  const [printFormat, setPrintFormat] = useState('sticker'); // 'sticker' | 'keychain'
+  // Detect default template based on batch data
+  const initialFormat = 
+    tags[0]?.productType === 'keychain' || batchInfo?.batchId?.includes('KEYCHAIN')
+      ? 'keychain'
+      : 'sticker';
+
+  const [printFormat, setPrintFormat] = useState(initialFormat);
+  const [gridDensity, setGridDensity] = useState('24'); // '24' (4x6) | '12' (3x4)
+  const [showLaserJig, setShowLaserJig] = useState(true);
   const [copiedSlug, setCopiedSlug] = useState(null);
+
+  useEffect(() => {
+    if (tags.length > 0) {
+      const isKeychain = tags[0]?.productType === 'keychain' || batchInfo?.batchId?.includes('KEYCHAIN');
+      setPrintFormat(isKeychain ? 'keychain' : 'sticker');
+    }
+  }, [tags, batchInfo]);
 
   if (!isOpen) return null;
 
-  // Export CSV for Laser Machine Operator or Barcode Labelers
+  // Export CSV for Laser Machine Operator or Commercial Barcode Printers
   const handleExportCSV = () => {
     if (!tags || tags.length === 0) return;
 
@@ -16,8 +43,8 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     const rows = tags.map((t) => [
       t.qrSlug,
       t.qrUrl || `https://findix.pk/q/${t.qrSlug}`,
-      t.productType || 'keychain',
-      t.batchId || batchInfo?.batchId || 'N/A',
+      t.productType || (printFormat === 'keychain' ? 'keychain' : 'sticker'),
+      t.batchId || batchInfo?.batchId || 'FACTORY-RUN',
       t.status || 'unclaimed',
       t.createdAt ? new Date(t.createdAt).toISOString() : new Date().toISOString(),
     ]);
@@ -27,7 +54,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Findix-QR-${batchInfo?.batchId || 'Batch'}-${Date.now()}.csv`);
+    link.setAttribute('download', `Findix-${printFormat.toUpperCase()}-${batchInfo?.batchId || 'BATCH'}-${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -43,183 +70,402 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     setTimeout(() => setCopiedSlug(null), 2000);
   };
 
+  const batchCode = batchInfo?.batchId || tags[0]?.batchId || 'BATCH-PROD-2026';
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in">
-      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
-        
-        {/* Header - Hidden in Print */}
-        <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0 print:hidden">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-600 animate-pulse" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 font-display">
-                Factory QR Print & Production Sheet
-              </h2>
-            </div>
-            <p className="text-xs text-slate-500">
-              {tags.length} unique tags ready for laser engraving or sticker label printing.
-            </p>
-          </div>
+    <>
+      {/* ========================================================= */}
+      {/* PRINT-SPECIFIC CSS RULES                                  */}
+      {/* Guarantees that ONLY the printable sheet prints cleanly!  */}
+      {/* ========================================================= */}
+      <style>{`
+        @media print {
+          /* 1. Hide everything on the page outside our sheet */
+          body * {
+            visibility: hidden !important;
+          }
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCSV}
-              className="text-xs font-semibold border-slate-300"
-            >
-              <Download className="w-3.5 h-3.5 mr-1 text-slate-600" />
-              <span>Export CSV</span>
-            </Button>
+          /* 2. Show only the printable container & its children */
+          #findix-factory-print-sheet,
+          #findix-factory-print-sheet * {
+            visibility: visible !important;
+          }
 
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleTriggerPrint}
-              className="text-xs font-bold shadow-md bg-cyan-600 hover:bg-cyan-700"
-            >
-              <Printer className="w-3.5 h-3.5 mr-1" />
-              <span>Print Sheet (A4)</span>
-            </Button>
+          /* 3. Lock printable sheet to the top of physical paper */
+          #findix-factory-print-sheet {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
 
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors ml-1 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+          /* 4. Standard A4 setup */
+          @page {
+            size: A4 portrait;
+            margin: 8mm 6mm;
+          }
 
-        {/* Format Selector Bar - Hidden in Print */}
-        <div className="px-6 py-3 bg-white border-b border-slate-100 flex items-center justify-between gap-4 shrink-0 text-xs print:hidden">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700">Target Template:</span>
-            <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setPrintFormat('sticker')}
-                className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                  printFormat === 'sticker'
-                    ? 'bg-white text-cyan-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Weatherproof Sticker Sheet (3-per-item)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintFormat('keychain')}
-                className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                  printFormat === 'keychain'
-                    ? 'bg-white text-cyan-800 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Laser Metal Keychain Grid
-              </button>
-            </div>
-          </div>
+          /* 5. Prevent page-break cutting across a single label */
+          .print-card-avoid-break {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
 
-          <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-            A4 Standard Grid · 300 DPI QR Codes
-          </span>
-        </div>
+          /* 6. Strip UI elements */
+          .no-print {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        }
+      `}</style>
 
-        {/* Printable Grid Area */}
-        <div className="p-6 overflow-y-auto flex-1 bg-slate-100/50 print:bg-white print:p-0">
+      {/* Screen Modal Container (Hidden during physical print) */}
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-fade-in no-print">
+        <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 print:grid-cols-4 print:gap-3">
-            {tags.map((tag, idx) => {
-              const url = `https://findix.pk/q/${tag.qrSlug}`;
-              const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}&margin=1`;
-              const isCopied = copiedSlug === tag.qrSlug;
+          {/* Modal Header */}
+          <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/90 shrink-0">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-600 animate-pulse" />
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 font-display">
+                  Factory Print & Laser Production Sheet
+                </h2>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-100 text-cyan-800">
+                  {tags.length} Codes
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Formatted specifically for laser engraving machines (LightBurn/EzCad) and A4 sticker sheets.
+              </p>
+            </div>
 
-              return (
-                <div
-                  key={tag._id || tag.qrSlug || idx}
-                  className={`relative p-3.5 bg-white rounded-2xl border transition-all flex flex-col items-center justify-between text-center space-y-2 shadow-xs print:shadow-none print:border-slate-300 print:rounded-xl ${
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="text-xs font-semibold border-slate-300"
+              >
+                <Download className="w-3.5 h-3.5 mr-1 text-slate-600" />
+                <span>Export CSV</span>
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleTriggerPrint}
+                className="text-xs font-bold shadow-md bg-cyan-600 hover:bg-cyan-700"
+              >
+                <Printer className="w-3.5 h-3.5 mr-1" />
+                <span>Print Sheet (A4)</span>
+              </Button>
+
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors ml-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Production Controls Bar */}
+          <div className="px-5 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+            
+            {/* Format Selector */}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-700">Target Hardware:</span>
+              <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setPrintFormat('keychain')}
+                  className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
                     printFormat === 'keychain'
-                      ? 'border-slate-300 aspect-square justify-center'
-                      : 'border-cyan-200/80'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {/* Brand Tag Top */}
-                  <div className="flex items-center justify-between w-full px-1">
-                    <div className="flex items-center gap-1">
-                      <div className="w-3.5 h-3.5 rounded-full bg-cyan-50 border border-cyan-300 flex items-center justify-center p-0.5">
-                        <img src="/logo.png" alt="F" className="w-full h-full object-contain" />
-                      </div>
-                      <span className="text-[10px] font-black font-display tracking-wider text-slate-900">
-                        FIND<span className="text-cyan-600">IX</span>
-                      </span>
-                    </div>
-                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-500 uppercase">
-                      {printFormat === 'keychain' ? 'KEYCHAIN' : 'STICKER'}
-                    </span>
-                  </div>
+                  Laser Metal Keychain (High-Contrast B&W)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintFormat('sticker')}
+                  className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                    printFormat === 'sticker'
+                      ? 'bg-cyan-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Weatherproof Stickers (Pack Sheet)
+                </button>
+              </div>
+            </div>
 
-                  {/* QR Image */}
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 bg-white p-1 rounded-xl border border-slate-200 flex items-center justify-center shadow-2xs print:border-none print:p-0">
-                    <img
-                      src={qrImageSrc}
-                      alt={`QR ${tag.qrSlug}`}
-                      className="w-full h-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
+            {/* Density & Alignment Toggles */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                <span>Density:</span>
+                <select
+                  value={gridDensity}
+                  onChange={(e) => setGridDensity(e.target.value)}
+                  className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer"
+                >
+                  <option value="24">24 per sheet (4 x 6)</option>
+                  <option value="12">12 per sheet (3 x 4)</option>
+                </select>
+              </div>
 
-                  {/* Identifier & Instructions */}
-                  <div className="w-full space-y-0.5">
-                    <div className="font-mono font-black text-xs text-slate-900 tracking-wider">
-                      {tag.qrSlug}
-                    </div>
-                    <div className="text-[9px] text-slate-500 font-medium leading-tight">
-                      Scan with camera to activate
-                    </div>
-                  </div>
+              {printFormat === 'keychain' && (
+                <label className="flex items-center gap-1.5 cursor-pointer text-slate-600 select-none">
+                  <input
+                    type="checkbox"
+                    checked={showLaserJig}
+                    onChange={(e) => setShowLaserJig(e.target.checked)}
+                    className="rounded text-slate-900 focus:ring-0 cursor-pointer"
+                  />
+                  <span>Show Jig Guide Outline</span>
+                </label>
+              )}
+            </div>
 
-                  {/* Hover Copy Action - Hidden in Print */}
-                  <div className="w-full pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] print:hidden">
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(url, tag.qrSlug)}
-                      className="text-cyan-700 hover:text-cyan-800 font-semibold inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      <span>{isCopied ? 'Copied' : 'Copy URL'}</span>
-                    </button>
+          </div>
 
-                    <a
-                      href={`/q/${tag.qrSlug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-slate-700 inline-flex items-center gap-0.5"
-                    >
-                      <span>Test</span>
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </a>
-                  </div>
+          {/* Interactive Screen Preview Container */}
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60">
+            <div className="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+              <div className="text-center pb-4 mb-4 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
+                <span>PREVIEW MODE · A4 SHEET</span>
+                <span>BATCH: {batchCode}</span>
+                <span>TOTAL: {tags.length} UNITS</span>
+              </div>
 
-                </div>
-              );
-            })}
+              {/* Render the grid inside preview */}
+              <div
+                className={`grid gap-4 ${
+                  gridDensity === '24'
+                    ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+                    : 'grid-cols-2 sm:grid-cols-3'
+                }`}
+              >
+                {tags.map((tag, idx) => (
+                  <LabelCard
+                    key={tag._id || tag.qrSlug || idx}
+                    tag={tag}
+                    printFormat={printFormat}
+                    showLaserJig={showLaserJig}
+                    gridDensity={gridDensity}
+                    onCopy={() => copyToClipboard(`https://findix.pk/q/${tag.qrSlug}`, tag.qrSlug)}
+                    isCopied={copiedSlug === tag.qrSlug}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 shrink-0">
+            <span className="font-mono">
+              Ready for physical printing: Click "Print Sheet (A4)" or press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300 font-semibold">Ctrl+P</kbd>
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="xs" onClick={onClose} className="border-slate-300">
+                Cancel
+              </Button>
+              <Button variant="primary" size="xs" onClick={handleTriggerPrint} className="bg-cyan-600 hover:bg-cyan-700">
+                <Printer className="w-3.5 h-3.5 mr-1" />
+                <span>Print Document</span>
+              </Button>
+            </div>
           </div>
 
         </div>
+      </div>
 
-        {/* Footer info bar - Hidden in Print */}
-        <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 shrink-0 print:hidden">
-          <div className="flex items-center gap-2">
-            <span className="font-mono font-semibold text-slate-700">Factory Dispatch:</span>
-            <span>Laser speed 120mm/s · Resolution 0.05mm · High-tack 3M Vinyl for stickers</span>
+      {/* ========================================================= */}
+      {/* 4. THE CLEAN PRINTABLE SHEET (Visible ONLY when printing)  */}
+      {/* ========================================================= */}
+      <div id="findix-factory-print-sheet" className="hidden print:block bg-white text-black p-0 m-0">
+        
+        {/* Minimal Factory Sheet Identification Header */}
+        <div className="text-[10px] font-mono text-black border-b border-black pb-1 mb-3 flex items-center justify-between">
+          <div className="font-bold tracking-wider">
+            FINDIX PRODUCTION FACTORY SHEET · {printFormat === 'keychain' ? 'LASER METAL KEYCHAIN' : 'WEATHERPROOF QR STICKERS'}
           </div>
-          <Button variant="secondary" size="xs" onClick={onClose} className="border-slate-300">
-            Close Preview
-          </Button>
+          <div>
+            BATCH: {batchCode} · {tags.length} UNITS · {new Date().toLocaleDateString()}
+          </div>
+        </div>
+
+        {/* The Clean Printable Grid */}
+        <div
+          className={`grid gap-3 ${
+            gridDensity === '24'
+              ? 'grid-cols-4'
+              : 'grid-cols-3'
+          }`}
+          style={{ width: '100%' }}
+        >
+          {tags.map((tag, idx) => (
+            <div key={tag._id || tag.qrSlug || idx} className="print-card-avoid-break">
+              <LabelCard
+                tag={tag}
+                printFormat={printFormat}
+                showLaserJig={showLaserJig}
+                gridDensity={gridDensity}
+                isPrintMode={true}
+              />
+            </div>
+          ))}
         </div>
 
       </div>
+    </>
+  );
+};
+
+/**
+ * Individual Label Component (Renders Laser Engraving format or Sticker format)
+ */
+const LabelCard = ({
+  tag,
+  printFormat,
+  showLaserJig = true,
+  gridDensity = '24',
+  isPrintMode = false,
+  onCopy,
+  isCopied,
+}) => {
+  const url = `https://findix.pk/q/${tag.qrSlug}`;
+  // High-resolution crisp QR code (300 DPI friendly)
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(url)}&margin=1`;
+
+  // =============================================================
+  // 1. LASER METAL KEYCHAIN TEMPLATE (Pure B&W for Laser Cutters)
+  // =============================================================
+  if (printFormat === 'keychain') {
+    return (
+      <div
+        className={`relative bg-white text-black flex flex-col items-center justify-between text-center transition-all ${
+          showLaserJig
+            ? 'border-2 border-black rounded-2xl'
+            : 'border border-dashed border-slate-300 rounded-xl'
+        } ${
+          gridDensity === '24' ? 'p-3 aspect-square' : 'p-4 aspect-square'
+        } ${!isPrintMode ? 'shadow-2xs hover:border-cyan-500' : ''}`}
+        style={{
+          boxSizing: 'border-box',
+          backgroundColor: '#FFFFFF',
+          color: '#000000',
+        }}
+      >
+        {/* Brand Top */}
+        <div className="w-full flex items-center justify-center gap-1 pt-0.5">
+          <span className="font-display font-black text-xs tracking-widest text-black">
+            FINDIX
+          </span>
+        </div>
+
+        {/* Pure Contrast QR Graphic */}
+        <div className="w-24 h-24 sm:w-26 sm:h-26 flex items-center justify-center p-0.5">
+          <img
+            src={qrImageSrc}
+            alt={tag.qrSlug}
+            className="w-full h-full object-contain filter contrast-200"
+            style={{ imageRendering: 'pixelated' }}
+            loading="lazy"
+          />
+        </div>
+
+        {/* Serial Slug & Laser Alignment Instruction */}
+        <div className="w-full pb-0.5">
+          <div className="font-mono font-black text-xs tracking-wider text-black">
+            {tag.qrSlug}
+          </div>
+          <div className="text-[8px] font-mono uppercase tracking-widest text-black/70">
+            SCAN TO RETURN
+          </div>
+        </div>
+
+        {/* Copy Button (Only on screen preview, NEVER in print) */}
+        {!isPrintMode && onCopy && (
+          <button
+            type="button"
+            onClick={onCopy}
+            className="absolute top-1 right-1 p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] cursor-pointer no-print"
+            title="Copy URL"
+          >
+            {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // =============================================================
+  // 2. WEATHERPROOF STICKER TEMPLATE (Color / Cut Guides)
+  // =============================================================
+  return (
+    <div
+      className={`relative bg-white flex flex-col items-center justify-between text-center rounded-2xl border border-dashed border-slate-400 transition-all ${
+        gridDensity === '24' ? 'p-3 aspect-[1/1.08]' : 'p-4 aspect-[1/1.08]'
+      } ${!isPrintMode ? 'shadow-xs hover:border-cyan-500' : 'print:border-slate-400'}`}
+      style={{
+        boxSizing: 'border-box',
+        backgroundColor: '#FFFFFF',
+      }}
+    >
+      {/* Brand Header */}
+      <div className="flex items-center justify-between w-full px-0.5 pt-0.5">
+        <div className="flex items-center gap-1">
+          <div className="w-3.5 h-3.5 rounded-full bg-cyan-50 border border-cyan-400 flex items-center justify-center p-0.5">
+            <img src="/logo.png" alt="F" className="w-full h-full object-contain" />
+          </div>
+          <span className="font-display font-black text-[11px] tracking-wider text-slate-900">
+            FIND<span className="text-cyan-600">IX</span>
+          </span>
+        </div>
+        <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-600 font-bold uppercase">
+          STICKER
+        </span>
+      </div>
+
+      {/* QR Code */}
+      <div className="w-24 h-24 sm:w-26 sm:h-26 flex items-center justify-center p-0.5 my-0.5">
+        <img
+          src={qrImageSrc}
+          alt={tag.qrSlug}
+          className="w-full h-full object-contain"
+          loading="lazy"
+        />
+      </div>
+
+      {/* Serial ID & Instructions */}
+      <div className="w-full pb-0.5 space-y-0.5">
+        <div className="font-mono font-black text-xs text-slate-900 tracking-wider">
+          {tag.qrSlug}
+        </div>
+        <div className="text-[9px] font-medium text-slate-600 leading-tight">
+          Scan with camera to link / return
+        </div>
+      </div>
+
+      {/* Copy Button (Only on screen preview, NEVER in print) */}
+      {!isPrintMode && onCopy && (
+        <button
+          type="button"
+          onClick={onCopy}
+          className="absolute top-1.5 right-1.5 p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] cursor-pointer no-print"
+          title="Copy URL"
+        >
+          {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+        </button>
+      )}
     </div>
   );
 };

@@ -470,8 +470,13 @@ export const AdminPage = () => {
   });
 
   return (
-    <div className="space-y-8 pb-32 max-w-7xl mx-auto px-4 pt-4 sm:pt-6 animate-fade-in">
+    <div className="space-y-8 pb-32 max-w-7xl mx-auto px-4 pt-4 sm:pt-6 animate-fade-in print:p-0 print:m-0 print:max-w-none print:pb-0">
       
+      {/* ========================================================= */}
+      {/* SCREEN UI CONTAINER (Completely Hidden When Printing Sheet) */}
+      {/* ========================================================= */}
+      <div className="space-y-8 print:hidden">
+
       {/* ========================================================= */}
       {/* 1. SECURITY & IDENTITY BANNER */}
       {/* ========================================================= */}
@@ -1289,6 +1294,8 @@ export const AdminPage = () => {
           )}
         </Card>
       )}
+
+      </div> {/* Close Screen UI Container (print:hidden) */}
 
       {/* ========================================================= */}
       {/* MODALS */}

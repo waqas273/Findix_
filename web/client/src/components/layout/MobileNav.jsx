@@ -16,7 +16,7 @@ export const MobileNav = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-3 left-4 right-4 z-40">
+    <div className="md:hidden fixed bottom-3 left-4 right-4 z-40 print:hidden">
       {/* Floating Glass Pill Container */}
       <nav className="relative rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-lg px-3 py-2">
         <div className="flex items-center justify-around">
