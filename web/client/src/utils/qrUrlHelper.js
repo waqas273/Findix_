@@ -22,3 +22,4 @@ export const getQrActivationUrl = (slug) => {
 };
 
 export default getQrActivationUrl;
+

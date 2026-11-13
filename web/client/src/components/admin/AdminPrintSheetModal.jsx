@@ -12,6 +12,7 @@ import { getQrActivationUrl } from '../../utils/qrUrlHelper';
 
 export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = null }) => {
   const [copiedSlug, setCopiedSlug] = useState(null);
+  const [previewPageIndex, setPreviewPageIndex] = useState(0);
 
   if (!isOpen) return null;
 
@@ -238,16 +239,44 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60">
             <div className="max-w-4xl mx-auto bg-white p-5 sm:p-7 rounded-2xl shadow-sm border border-slate-200">
               
-              {/* Preview Header */}
-              <div className="text-center pb-3 mb-4 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
-                <span>PREVIEW MODE · A4 SHEET (6 × 7 = 42 CODES/PAGE)</span>
-                <span>BATCH: {batchCode}</span>
-                <span>TOTAL: {tags.length} CODES</span>
+              {/* Preview Header & Sheet Navigator */}
+              <div className="pb-3 mb-4 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 font-mono">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900">PREVIEW MODE</span>
+                  <span>·</span>
+                  <span>BATCH: <strong className="text-cyan-800">{batchCode}</strong></span>
+                  <span>·</span>
+                  <span>TOTAL: {tags.length} CODES ({totalSheets} {totalSheets === 1 ? 'SHEET' : 'SHEETS'})</span>
+                </div>
+
+                {totalSheets > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      disabled={previewPageIndex === 0}
+                      onClick={() => setPreviewPageIndex((p) => Math.max(0, p - 1))}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:pointer-events-none font-bold text-[11px] cursor-pointer transition-colors"
+                    >
+                      ← Prev Sheet
+                    </button>
+                    <span className="text-[11px] font-bold text-slate-800 px-1 font-mono">
+                      Sheet {previewPageIndex + 1} of {totalSheets}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={previewPageIndex >= totalSheets - 1}
+                      onClick={() => setPreviewPageIndex((p) => Math.min(totalSheets - 1, p + 1))}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:pointer-events-none font-bold text-[11px] cursor-pointer transition-colors"
+                    >
+                      Next Sheet →
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Render the 6-column grid inside screen preview */}
+              {/* Render the active sheet (42 codes) inside screen preview */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {tags.map((tag, idx) => (
+                {(tagChunks[previewPageIndex] || tagChunks[0] || []).map((tag, idx) => (
                   <PrintCardItem
                     key={tag._id || tag.qrSlug || idx}
                     tag={tag}

@@ -122,6 +122,22 @@ export const AdminPage = () => {
   const [loadingTags, setLoadingTags] = useState(false);
   const [qrCategory, setQrCategory] = useState('Laser Metal Keychain');
   const [batchSize, setBatchSize] = useState(42);
+  const [isCustomQty, setIsCustomQty] = useState(false);
+  const [customQtyInput, setCustomQtyInput] = useState('2000');
+
+  // Calculate effective batch size:
+  // If custom: rounds up to full A4 sheets (multiples of 42)
+  // e.g. 2000 -> Math.ceil(2000 / 42) = 48 -> 48 * 42 = 2016
+  const getCalculatedQty = (inputVal) => {
+    const parsed = parseInt(inputVal, 10);
+    if (isNaN(parsed) || parsed <= 0) return 42;
+    if (parsed <= 21) return 21; // Half-sheet
+    const pages = Math.ceil(parsed / 42);
+    return Math.min(10000, pages * 42);
+  };
+
+  const effectiveBatchSize = isCustomQty ? getCalculatedQty(customQtyInput) : batchSize;
+  const effectivePagesCount = effectiveBatchSize <= 21 ? 0.5 : Math.ceil(effectiveBatchSize / 42);
   const [batchNotes, setBatchNotes] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [tagStatusFilter, setTagStatusFilter] = useState('all');
@@ -322,7 +338,7 @@ export const AdminPage = () => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          batchSize: parseInt(batchSize, 10) || 42,
+          batchSize: effectiveBatchSize,
           categoryTag: qrCategory,
           batchRef: batchRefInput.trim(),
           notes: batchNotes.trim(),
@@ -331,7 +347,7 @@ export const AdminPage = () => {
 
       if (res.ok) {
         const json = await res.json();
-        addToast('success', `Manufactured ${batchSize} sequential QR tags for batch "${batchRefInput.trim()}"! Stored in database.`);
+        addToast('success', `Manufactured ${effectiveBatchSize.toLocaleString()} sequential QR tags (${effectivePagesCount} A4 ${effectivePagesCount === 1 ? 'Sheet' : 'Sheets'}) for batch "${batchRefInput.trim()}"! Stored in database.`);
         fetchTags();
         fetchBatches();
         fetchMetrics();
@@ -942,18 +958,67 @@ export const AdminPage = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Batch Quantity (Codes)</label>
-                <select
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
-                >
-                  <option value={21}>21 Codes (Half Page · 0.5 A4 Sheet)</option>
-                  <option value={42}>42 Codes (1 Full Page · 1.0 A4 Sheet)</option>
-                  <option value={84}>84 Codes (2 Full Pages · 2.0 A4 Sheets)</option>
-                  <option value={126}>126 Codes (3 Full Pages · 3.0 A4 Sheets)</option>
-                  <option value={210}>210 Codes (5 Full Pages · 5.0 A4 Sheets)</option>
-                </select>
+                <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Batch Quantity</span>
+                  {isCustomQty ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomQty(false);
+                        setBatchSize(42);
+                      }}
+                      className="text-[10px] text-cyan-700 hover:text-cyan-900 font-semibold cursor-pointer underline"
+                    >
+                      ← Presets
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {batchSize <= 21 ? '0.5 Sheet' : `${Math.ceil(batchSize / 42)} Sheets`}
+                    </span>
+                  )}
+                </label>
+
+                {!isCustomQty ? (
+                  <select
+                    value={batchSize}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setIsCustomQty(true);
+                        setCustomQtyInput('2000');
+                      } else {
+                        setBatchSize(Number(e.target.value));
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-900 font-semibold focus:outline-none focus:border-cyan-600 cursor-pointer"
+                  >
+                    <option value={21}>21 Codes (Half Page · 0.5 A4 Sheet)</option>
+                    <option value={42}>42 Codes (1 Full Page · 1.0 A4 Sheet)</option>
+                    <option value={84}>84 Codes (2 Full Pages · 2.0 A4 Sheets)</option>
+                    <option value={126}>126 Codes (3 Full Pages · 3.0 A4 Sheets)</option>
+                    <option value={210}>210 Codes (5 Full Pages · 5.0 A4 Sheets)</option>
+                    <option value={420}>420 Codes (10 Full Pages · 10 A4 Sheets)</option>
+                    <option value={840}>840 Codes (20 Full Pages · 20 A4 Sheets)</option>
+                    <option value="custom">✍️ Custom Quantity (e.g. 2000)...</option>
+                  </select>
+                ) : (
+                  <div className="space-y-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max="10000"
+                      step="1"
+                      placeholder="e.g. 2000"
+                      value={customQtyInput}
+                      onChange={(e) => setCustomQtyInput(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-cyan-600 text-xs text-slate-900 font-bold focus:outline-none focus:ring-1 focus:ring-cyan-600"
+                      autoFocus
+                    />
+                    <div className="text-[10px] text-cyan-900 bg-cyan-50/80 border border-cyan-200/80 px-2 py-0.5 rounded-lg font-mono flex items-center justify-between">
+                      <span>Input: {parseInt(customQtyInput, 10) || 0}</span>
+                      <span>→ <strong>{effectiveBatchSize.toLocaleString()}</strong> ({effectivePagesCount} Sheets × 42)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -998,7 +1063,7 @@ export const AdminPage = () => {
                   className="font-bold shadow-md bg-cyan-600 hover:bg-cyan-700 w-full sm:w-auto px-6"
                 >
                   <Sparkles className="w-4 h-4 mr-1.5" />
-                  <span>Manufacture QR Batch ({batchSize} Codes)</span>
+                  <span>Manufacture QR Batch ({effectiveBatchSize.toLocaleString()} Codes · {effectivePagesCount} {effectivePagesCount === 1 ? 'Sheet' : 'Sheets'})</span>
                 </Button>
               </div>
             </form>

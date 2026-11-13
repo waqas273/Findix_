@@ -92,7 +92,15 @@ export const bulkGenerateQRTags = async (req, res) => {
       return errorResponse(res, 400, 'Production Notes are compulsory! Please enter production details.');
     }
 
-    const count = Math.min(1000, Math.max(1, parseInt(batchSize, 10) || 42));
+    // Round to full sheets (42 codes per A4 page) or 21 (half sheet)
+    const rawCount = Math.max(1, parseInt(batchSize, 10) || 42);
+    let adjustedCount = rawCount;
+    if (rawCount <= 21) {
+      adjustedCount = 21;
+    } else if (rawCount % 42 !== 0) {
+      adjustedCount = Math.ceil(rawCount / 42) * 42;
+    }
+    const count = Math.min(10000, adjustedCount);
     const normalizedType = categoryTag.toLowerCase().includes('sticker') ? 'sticker' : 'keychain';
     const typeCode = normalizedType === 'sticker' ? 'ST' : 'KC';
     
