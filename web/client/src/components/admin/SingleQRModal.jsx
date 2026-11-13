@@ -18,7 +18,8 @@ export const SingleQRModal = ({ isOpen, onClose, tag }) => {
   if (!isOpen || !tag) return null;
 
   const url = `https://findix.pk/q/${tag.qrSlug}`;
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&margin=1`;
+  // High-redundancy QR code (Level H) allowing up to 30% center overlay without data loss
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}&ecc=H&margin=1`;
 
   const copyUrl = () => {
     navigator.clipboard.writeText(url);
@@ -36,7 +37,9 @@ export const SingleQRModal = ({ isOpen, onClose, tag }) => {
           <style>
             @page { size: 50mm 50mm; margin: 2mm; }
             body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 2mm; text-align: center; }
-            img { width: 32mm; height: 32mm; }
+            .qr-box { position: relative; width: 32mm; height: 32mm; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+            img { width: 32mm; height: 32mm; image-rendering: pixelated; }
+            .center-brand { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ffffff; padding: 0.8mm 1.8mm; border: 0.7px solid #000000; border-radius: 2px; font-family: sans-serif; font-weight: 900; font-size: 5pt; letter-spacing: 0.5px; text-transform: uppercase; }
             .brand { font-size: 8pt; font-weight: 900; letter-spacing: 1px; margin-bottom: 1mm; }
             .code { font-size: 8pt; font-family: monospace; font-weight: bold; margin-top: 1mm; }
             .sub { font-size: 5.5pt; font-family: monospace; letter-spacing: 0.5px; }
@@ -44,7 +47,10 @@ export const SingleQRModal = ({ isOpen, onClose, tag }) => {
         </head>
         <body onload="window.print(); window.close();">
           <div class="brand">FINDIX</div>
-          <img src="${qrImageSrc}" alt="${tag.qrSlug}" />
+          <div class="qr-box">
+            <img src="${qrImageSrc}" alt="${tag.qrSlug}" />
+            <div class="center-brand">FINDIX</div>
+          </div>
           <div class="code">${tag.qrSlug}</div>
           <div class="sub">SCAN TO RETURN</div>
         </body>
@@ -79,12 +85,18 @@ export const SingleQRModal = ({ isOpen, onClose, tag }) => {
             FINDIX
           </div>
 
-          <div className="w-44 h-44 bg-white p-2 rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
+          <div className="relative w-44 h-44 bg-white p-2 rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
             <img
               src={qrImageSrc}
               alt={tag.qrSlug}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain filter contrast-125"
             />
+            {/* Centered Branded Findix Badge */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-0.5 rounded-[4px] border border-slate-400 shadow-xs flex items-center justify-center pointer-events-none">
+              <span className="font-display font-black text-[9px] tracking-widest text-slate-900 uppercase leading-none">
+                FINDIX
+              </span>
+            </div>
           </div>
 
           <div>

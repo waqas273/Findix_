@@ -69,6 +69,11 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
       {/* ========================================================= */}
       <style>{`
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
           /* 1. Exact A4 Dimensions & Tight 4mm Margins */
           @page {
             size: A4 portrait;
@@ -318,7 +323,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
 /**
  * Individual QR Card Item calibrated for 42 codes per A4 page (6 x 7):
- * - Sharp QR code (23mm x 23mm)
+ * - Sharp QR code with central Findix Brand badge (ecc=H high redundancy)
  * - Alphanumeric Code with tight vertical spacing (FDX-KC01-0001)
  * - SCAN TO RETURN
  * - Light dashed cutting line (NO solid black border!)
@@ -330,14 +335,14 @@ const PrintCardItem = ({
   isCopied,
 }) => {
   const url = `https://findix.pk/q/${tag.qrSlug}`;
-  // High-resolution crisp QR code
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&margin=1`;
+  // High-redundancy QR code (Level H) allowing up to 30% center overlay without data loss
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}&ecc=H&margin=1`;
 
   if (isPrintMode) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center text-center p-0 m-0 text-black bg-white select-none">
-        {/* High-Resolution QR Graphic (23mm x 23mm) */}
-        <div className="w-[23mm] h-[23mm] flex items-center justify-center shrink-0">
+        {/* High-Resolution QR Graphic (23mm x 23mm) with Center Findix Badge */}
+        <div className="relative w-[23mm] h-[23mm] flex items-center justify-center shrink-0">
           <img
             src={qrImageSrc}
             alt={tag.qrSlug}
@@ -345,6 +350,18 @@ const PrintCardItem = ({
             style={{ imageRendering: 'pixelated' }}
             loading="eager"
           />
+          {/* Centered Branded Findix Badge */}
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-[1.2mm] py-[0.35mm] rounded-[1.5px] border-[0.6px] border-black flex items-center justify-center shadow-2xs pointer-events-none"
+            style={{ backgroundColor: '#ffffff' }}
+          >
+            <span 
+              className="font-sans font-black tracking-[0.4px] text-black leading-none uppercase select-none"
+              style={{ fontSize: '3.8pt', fontWeight: 900 }}
+            >
+              FINDIX
+            </span>
+          </div>
         </div>
 
         {/* Minimal tight space between QR and alphanumeric code */}
@@ -369,8 +386,8 @@ const PrintCardItem = ({
         color: '#000000',
       }}
     >
-      {/* High-Resolution QR Graphic */}
-      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center p-0.5 mx-auto shrink-0">
+      {/* High-Resolution QR Graphic with Center Brand */}
+      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center p-0.5 mx-auto shrink-0">
         <img
           src={qrImageSrc}
           alt={tag.qrSlug}
@@ -378,6 +395,12 @@ const PrintCardItem = ({
           style={{ imageRendering: 'pixelated' }}
           loading="eager"
         />
+        {/* Center Brand Badge */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-1.5 py-0.5 rounded-[3px] border border-slate-300 shadow-xs flex items-center justify-center pointer-events-none">
+          <span className="font-display font-black text-[7px] sm:text-[8px] tracking-wider text-slate-900 uppercase leading-none">
+            FINDIX
+          </span>
+        </div>
       </div>
 
       {/* Alphanumeric Code & SCAN TO RETURN */}
