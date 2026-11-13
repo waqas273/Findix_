@@ -6,7 +6,7 @@ import { CartDrawer } from './CartDrawer';
 
 export const AppLayout = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 relative selection:bg-cyan-500/20 selection:text-cyan-800 pb-20 md:pb-0 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 relative selection:bg-cyan-500/20 selection:text-cyan-800 overflow-x-hidden">
       
       {/* Background subtle light ambient gradient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
