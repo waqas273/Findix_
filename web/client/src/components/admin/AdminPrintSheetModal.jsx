@@ -8,6 +8,7 @@ import {
   Scissors
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { getQrActivationUrl } from '../../utils/qrUrlHelper';
 
 export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = null }) => {
   const [copiedSlug, setCopiedSlug] = useState(null);
@@ -21,7 +22,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     const headers = ['QR Slug', 'Full Activation URL', 'Product Type', 'Batch ID', 'Status', 'Generated Date'];
     const rows = tags.map((t) => [
       t.qrSlug,
-      t.qrUrl || `https://findix.pk/q/${t.qrSlug}`,
+      t.qrUrl || getQrActivationUrl(t.qrSlug),
       t.productType || 'keychain',
       t.batchId || batchInfo?.batchId || 'FACTORY-RUN',
       t.status || 'unclaimed',
@@ -250,7 +251,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
                   <PrintCardItem
                     key={tag._id || tag.qrSlug || idx}
                     tag={tag}
-                    onCopy={() => copyToClipboard(`https://findix.pk/q/${tag.qrSlug}`, tag.qrSlug)}
+                    onCopy={() => copyToClipboard(getQrActivationUrl(tag.qrSlug), tag.qrSlug)}
                     isCopied={copiedSlug === tag.qrSlug}
                     isPrintMode={false}
                   />
@@ -334,7 +335,7 @@ const PrintCardItem = ({
   onCopy,
   isCopied,
 }) => {
-  const url = `https://findix.pk/q/${tag.qrSlug}`;
+  const url = getQrActivationUrl(tag.qrSlug);
   // High-redundancy QR code (Level H) allowing up to 30% center overlay without data loss
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}&ecc=H&margin=1`;
 

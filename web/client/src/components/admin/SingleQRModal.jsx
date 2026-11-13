@@ -11,13 +11,14 @@ import {
   QrCode
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { getQrActivationUrl } from '../../utils/qrUrlHelper';
 
 export const SingleQRModal = ({ isOpen, onClose, tag }) => {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen || !tag) return null;
 
-  const url = `https://findix.pk/q/${tag.qrSlug}`;
+  const url = getQrActivationUrl(tag.qrSlug);
   // High-redundancy QR code (Level H) allowing up to 30% center overlay without data loss
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(url)}&ecc=H&margin=1`;
 

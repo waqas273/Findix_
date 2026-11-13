@@ -45,6 +45,7 @@ import { Input } from '../components/ui/Input';
 import { AdminProductModal } from '../components/admin/AdminProductModal';
 import { AdminPrintSheetModal } from '../components/admin/AdminPrintSheetModal';
 import { SingleQRModal } from '../components/admin/SingleQRModal';
+import { getQrActivationUrl } from '../utils/qrUrlHelper';
 
 export const AdminPage = () => {
   const { user, token } = useAuth();
@@ -426,7 +427,7 @@ export const AdminPage = () => {
     const headers = ['QR Slug', 'Full Activation URL', 'Product Type', 'Status', 'Linked Item', 'Owner Email', 'Created At'];
     const rows = tagsToExport.map((t) => [
       t.qrSlug,
-      `https://findix.pk/q/${t.qrSlug}`,
+      t.qrUrl || getQrActivationUrl(t.qrSlug),
       t.productType || 'keychain',
       t.status || 'unclaimed',
       t.itemName || 'Unassigned',

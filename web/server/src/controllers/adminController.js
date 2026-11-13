@@ -118,6 +118,8 @@ export const bulkGenerateQRTags = async (req, res) => {
     const newSlugs = [];
     const newTagDocuments = [];
 
+    const appBaseUrl = (process.env.APP_BASE_URL || process.env.CLIENT_URL || 'https://findix.vercel.app').replace(/\/+$/, '');
+
     for (let i = 0; i < count; i++) {
       const unitIndex = startingIndex + i;
       const paddedUnit = String(unitIndex).padStart(4, '0'); // e.g. 0001, 0002 ... 0042
@@ -134,7 +136,7 @@ export const bulkGenerateQRTags = async (req, res) => {
 
       newSlugs.push({
         qrSlug: slug,
-        qrUrl: `https://findix.pk/q/${slug}`,
+        qrUrl: `${appBaseUrl}/q/${slug}`,
         status: 'unclaimed',
         productType: normalizedType,
         categoryTag,
