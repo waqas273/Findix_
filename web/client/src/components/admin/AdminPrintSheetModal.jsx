@@ -76,50 +76,55 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     <>
       {/* ========================================================= */}
       {/* PRINT-SPECIFIC CSS RULES                                  */}
-      {/* Guarantees that ONLY the printable sheet prints cleanly!  */}
+      {/* Ensures normal page flow & eliminates row-cutting issues! */}
       {/* ========================================================= */}
       <style>{`
         @media print {
-          /* 1. Hide everything on the page outside our sheet */
-          body * {
-            visibility: hidden !important;
+          /* 1. Standard A4 Page Setup */
+          @page {
+            size: A4 portrait;
+            margin: 10mm 8mm;
           }
 
-          /* 2. Show only the printable container & its children */
-          #findix-factory-print-sheet,
-          #findix-factory-print-sheet * {
-            visibility: visible !important;
+          /* 2. Full reset on body/html */
+          html, body, #root, #root > div {
+            width: 100% !important;
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
-          /* 3. Lock printable sheet to the top of physical paper */
+          /* 3. Hide all non-print screen elements */
+          .no-print,
+          .print\\:hidden,
+          header,
+          footer,
+          nav,
+          .fixed {
+            display: none !important;
+          }
+
+          /* 4. Normal document flow for printable sheet */
           #findix-factory-print-sheet {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            display: block !important;
+            position: static !important;
             width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
-            box-shadow: none !important;
-            border: none !important;
+            background: #ffffff !important;
+            overflow: visible !important;
           }
 
-          /* 4. Standard A4 setup */
-          @page {
-            size: A4 portrait;
-            margin: 8mm 6mm;
-          }
-
-          /* 5. Prevent page-break cutting across a single label */
+          /* 5. NEVER cut a label card in half across page boundaries */
           .print-card-avoid-break {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
-          }
-
-          /* 6. Strip UI elements */
-          .no-print {
-            display: none !important;
-            visibility: hidden !important;
+            page-break-after: auto !important;
+            display: block !important;
           }
         }
       `}</style>
@@ -216,8 +221,8 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
                   onChange={(e) => setGridDensity(e.target.value)}
                   className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer"
                 >
-                  <option value="24">24 per sheet (4 x 6)</option>
-                  <option value="12">12 per sheet (3 x 4)</option>
+                  <option value="24">Standard (4 columns / 16-24 per A4)</option>
+                  <option value="12">Large (3 columns / 12 per A4)</option>
                 </select>
               </div>
 
@@ -247,7 +252,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
               {/* Render the grid inside preview */}
               <div
-                className={`grid gap-4 ${
+                className={`grid gap-3.5 ${
                   gridDensity === '24'
                     ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
                     : 'grid-cols-2 sm:grid-cols-3'
@@ -289,11 +294,12 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
       {/* ========================================================= */}
       {/* 4. THE CLEAN PRINTABLE SHEET (Visible ONLY when printing)  */}
+      {/* Normal in-flow block so the browser paginates without cuts */}
       {/* ========================================================= */}
       <div id="findix-factory-print-sheet" className="hidden print:block bg-white text-black p-0 m-0">
         
         {/* Minimal Factory Sheet Identification Header */}
-        <div className="text-[10px] font-mono text-black border-b border-black pb-1 mb-3 flex items-center justify-between">
+        <div className="text-[10px] font-mono text-black border-b border-black pb-1 mb-2.5 flex items-center justify-between print-card-avoid-break">
           <div className="font-bold tracking-wider">
             FINDIX PRODUCTION FACTORY SHEET · {printFormat === 'keychain' ? 'LASER METAL KEYCHAIN' : 'WEATHERPROOF QR STICKERS'}
           </div>
@@ -309,7 +315,10 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
               ? 'grid-cols-4'
               : 'grid-cols-3'
           }`}
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            display: 'grid',
+          }}
         >
           {tags.map((tag, idx) => (
             <div key={tag._id || tag.qrSlug || idx} className="print-card-avoid-break">
@@ -331,6 +340,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
 /**
  * Individual Label Component (Renders Laser Engraving format or Sticker format)
+ * Calibrated specifically so 4 rows fit on A4 without touching the bottom boundary!
  */
 const LabelCard = ({
   tag,
@@ -356,38 +366,42 @@ const LabelCard = ({
             ? 'border-2 border-black rounded-2xl'
             : 'border border-dashed border-slate-300 rounded-xl'
         } ${
-          gridDensity === '24' ? 'p-3 aspect-square' : 'p-4 aspect-square'
+          gridDensity === '24' 
+            ? 'p-2 sm:p-2.5 h-[55mm] max-h-[55mm]' 
+            : 'p-3 h-[64mm] max-h-[64mm]'
         } ${!isPrintMode ? 'shadow-2xs hover:border-cyan-500' : ''}`}
         style={{
           boxSizing: 'border-box',
           backgroundColor: '#FFFFFF',
           color: '#000000',
+          breakInside: 'avoid',
+          pageBreakInside: 'avoid',
         }}
       >
         {/* Brand Top */}
-        <div className="w-full flex items-center justify-center gap-1 pt-0.5">
-          <span className="font-display font-black text-xs tracking-widest text-black">
+        <div className="w-full flex items-center justify-center pt-0.5">
+          <span className="font-display font-black text-[11px] tracking-widest text-black uppercase">
             FINDIX
           </span>
         </div>
 
         {/* Pure Contrast QR Graphic */}
-        <div className="w-24 h-24 sm:w-26 sm:h-26 flex items-center justify-center p-0.5">
+        <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center p-0.5 my-auto">
           <img
             src={qrImageSrc}
             alt={tag.qrSlug}
             className="w-full h-full object-contain filter contrast-200"
             style={{ imageRendering: 'pixelated' }}
-            loading="lazy"
+            loading="eager"
           />
         </div>
 
         {/* Serial Slug & Laser Alignment Instruction */}
         <div className="w-full pb-0.5">
-          <div className="font-mono font-black text-xs tracking-wider text-black">
+          <div className="font-mono font-black text-[11px] tracking-wider text-black">
             {tag.qrSlug}
           </div>
-          <div className="text-[8px] font-mono uppercase tracking-widest text-black/70">
+          <div className="text-[7.5px] font-mono uppercase tracking-widest text-black/80 font-bold">
             SCAN TO RETURN
           </div>
         </div>
@@ -413,11 +427,15 @@ const LabelCard = ({
   return (
     <div
       className={`relative bg-white flex flex-col items-center justify-between text-center rounded-2xl border border-dashed border-slate-400 transition-all ${
-        gridDensity === '24' ? 'p-3 aspect-[1/1.08]' : 'p-4 aspect-[1/1.08]'
+        gridDensity === '24' 
+          ? 'p-2 sm:p-2.5 h-[55mm] max-h-[55mm]' 
+          : 'p-3 h-[64mm] max-h-[64mm]'
       } ${!isPrintMode ? 'shadow-xs hover:border-cyan-500' : 'print:border-slate-400'}`}
       style={{
         boxSizing: 'border-box',
         backgroundColor: '#FFFFFF',
+        breakInside: 'avoid',
+        pageBreakInside: 'avoid',
       }}
     >
       {/* Brand Header */}
@@ -426,31 +444,31 @@ const LabelCard = ({
           <div className="w-3.5 h-3.5 rounded-full bg-cyan-50 border border-cyan-400 flex items-center justify-center p-0.5">
             <img src="/logo.png" alt="F" className="w-full h-full object-contain" />
           </div>
-          <span className="font-display font-black text-[11px] tracking-wider text-slate-900">
+          <span className="font-display font-black text-[10px] tracking-wider text-slate-900">
             FIND<span className="text-cyan-600">IX</span>
           </span>
         </div>
-        <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-600 font-bold uppercase">
+        <span className="text-[7.5px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-600 font-bold uppercase">
           STICKER
         </span>
       </div>
 
       {/* QR Code */}
-      <div className="w-24 h-24 sm:w-26 sm:h-26 flex items-center justify-center p-0.5 my-0.5">
+      <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center p-0.5 my-auto">
         <img
           src={qrImageSrc}
           alt={tag.qrSlug}
           className="w-full h-full object-contain"
-          loading="lazy"
+          loading="eager"
         />
       </div>
 
       {/* Serial ID & Instructions */}
       <div className="w-full pb-0.5 space-y-0.5">
-        <div className="font-mono font-black text-xs text-slate-900 tracking-wider">
+        <div className="font-mono font-black text-[11px] text-slate-900 tracking-wider">
           {tag.qrSlug}
         </div>
-        <div className="text-[9px] font-medium text-slate-600 leading-tight">
+        <div className="text-[8px] font-medium text-slate-600 leading-tight">
           Scan with camera to link / return
         </div>
       </div>
