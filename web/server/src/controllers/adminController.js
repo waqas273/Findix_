@@ -82,9 +82,10 @@ export const getGlobalMetrics = async (req, res) => {
  */
 export const bulkGenerateQRTags = async (req, res) => {
   try {
-    const { batchSize = 50, categoryTag = 'General', notes = '' } = req.body;
+    const { batchSize = 50, categoryTag = 'Laser Metal Keychain', notes = '' } = req.body;
     const count = Math.min(1000, Math.max(1, parseInt(batchSize, 10) || 50));
-    const batchId = `BATCH-${Date.now()}`;
+    const normalizedType = categoryTag.toLowerCase().includes('sticker') ? 'sticker' : 'keychain';
+    const batchId = `BATCH-${normalizedType.toUpperCase()}-${Date.now()}`;
 
     const newSlugs = [];
     const newTagDocuments = [];
@@ -95,6 +96,7 @@ export const bulkGenerateQRTags = async (req, res) => {
         qrSlug: slug,
         qrUrl: `https://findix.pk/q/${slug}`,
         status: 'unclaimed',
+        productType: normalizedType,
         categoryTag,
         batchId,
         createdAt: new Date(),
@@ -103,6 +105,9 @@ export const bulkGenerateQRTags = async (req, res) => {
       newTagDocuments.push({
         qrSlug: slug,
         status: 'unclaimed',
+        productType: normalizedType,
+        batchId,
+        manufactureNotes: notes || `${categoryTag} Factory Batch`,
         privacySettings: {
           showName: true,
           showPhone: false,
@@ -122,9 +127,10 @@ export const bulkGenerateQRTags = async (req, res) => {
 
     simulatedManufacturedTags = [...newSlugs, ...simulatedManufacturedTags];
 
-    return successResponse(res, 201, `Successfully generated ${count} cryptographic QR tags`, {
+    return successResponse(res, 201, `Successfully generated ${count} cryptographic QR tags for ${categoryTag}`, {
       batchId,
       batchSize: count,
+      productType: normalizedType,
       categoryTag,
       notes,
       generatedCount: newSlugs.length,
@@ -144,17 +150,28 @@ export const bulkGenerateQRTags = async (req, res) => {
  */
 export const getAllTags = async (req, res) => {
   try {
-    const { status, search, page = 1, limit = 50 } = req.query;
+    const { status, productType, search, page = 1, limit = 100 } = req.query;
     const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 50;
+    const limitNum = parseInt(limit, 10) || 100;
 
     if (mongoose.connection.readyState === 1) {
       let query = {};
       if (status && status !== 'all') {
-        query.status = status;
+        if (status === 'lost') {
+          query.isLost = true;
+        } else {
+          query.status = status;
+        }
+      }
+      if (productType && productType !== 'all') {
+        query.productType = productType;
       }
       if (search) {
-        query.qrSlug = { $regex: search, $options: 'i' };
+        query.$or = [
+          { qrSlug: { $regex: search, $options: 'i' } },
+          { itemName: { $regex: search, $options: 'i' } },
+          { batchId: { $regex: search, $options: 'i' } }
+        ];
       }
 
       const total = await QRItem.countDocuments(query);
@@ -175,6 +192,9 @@ export const getAllTags = async (req, res) => {
     let filtered = [...simulatedManufacturedTags];
     if (status && status !== 'all') {
       filtered = filtered.filter((t) => t.status === status);
+    }
+    if (productType && productType !== 'all') {
+      filtered = filtered.filter((t) => t.productType === productType);
     }
     if (search) {
       filtered = filtered.filter((t) => t.qrSlug.toLowerCase().includes(search.toLowerCase()));

@@ -7,6 +7,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ConfirmDialogProvider } from './context/ConfirmDialogContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { AdminRoute } from './components/admin/AdminRoute';
 
 // Code-Split Dynamic Route Imports with React.lazy
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -115,9 +116,9 @@ export function App() {
                     <Route
                       path="/admin"
                       element={
-                        <ProtectedRoute>
+                        <AdminRoute>
                           <AdminPage />
-                        </ProtectedRoute>
+                        </AdminRoute>
                       }
                     />
                     <Route

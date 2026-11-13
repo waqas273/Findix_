@@ -83,6 +83,23 @@ const qrItemSchema = new mongoose.Schema(
         default: '',
       },
     },
+    productType: {
+      type: String,
+      enum: ['keychain', 'sticker', 'general'],
+      default: 'keychain',
+      index: true,
+    },
+    batchId: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
+    manufactureNotes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,
