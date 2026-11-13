@@ -1,37 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Printer, 
   Download, 
   X, 
-  QrCode, 
   Check, 
-  Copy, 
-  Sliders, 
-  Maximize2, 
-  Grid, 
-  Sparkles,
-  Layers
+  Copy
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = null }) => {
-  // Detect default template based on batch data
-  const initialFormat = 
-    tags[0]?.productType === 'keychain' || batchInfo?.batchId?.includes('KEYCHAIN')
-      ? 'keychain'
-      : 'sticker';
-
-  const [printFormat, setPrintFormat] = useState(initialFormat);
-  const [gridDensity, setGridDensity] = useState('24'); // '24' (4x6) | '12' (3x4)
-  const [showLaserJig, setShowLaserJig] = useState(true);
   const [copiedSlug, setCopiedSlug] = useState(null);
-
-  useEffect(() => {
-    if (tags.length > 0) {
-      const isKeychain = tags[0]?.productType === 'keychain' || batchInfo?.batchId?.includes('KEYCHAIN');
-      setPrintFormat(isKeychain ? 'keychain' : 'sticker');
-    }
-  }, [tags, batchInfo]);
 
   if (!isOpen) return null;
 
@@ -43,7 +21,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     const rows = tags.map((t) => [
       t.qrSlug,
       t.qrUrl || `https://findix.pk/q/${t.qrSlug}`,
-      t.productType || (printFormat === 'keychain' ? 'keychain' : 'sticker'),
+      t.productType || 'keychain',
       t.batchId || batchInfo?.batchId || 'FACTORY-RUN',
       t.status || 'unclaimed',
       t.createdAt ? new Date(t.createdAt).toISOString() : new Date().toISOString(),
@@ -54,7 +32,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Findix-${printFormat.toUpperCase()}-${batchInfo?.batchId || 'BATCH'}-${Date.now()}.csv`);
+    link.setAttribute('download', `Findix-42Grid-${batchInfo?.batchId || 'BATCH'}-${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -70,23 +48,24 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
     setTimeout(() => setCopiedSlug(null), 2000);
   };
 
-  const batchCode = batchInfo?.batchId || tags[0]?.batchId || 'BATCH-PROD-2026';
+  const batchCode = batchInfo?.batchId || tags[0]?.batchId || 'BATCH-PROD-42';
+  const totalSheets = Math.ceil(tags.length / 42) || 1;
 
   return (
     <>
       {/* ========================================================= */}
       {/* PRINT-SPECIFIC CSS RULES                                  */}
-      {/* Ensures normal page flow & eliminates row-cutting issues! */}
+      {/* Calibrated exactly for 42 Codes per A4 Page (6 x 7 Grid)  */}
       {/* ========================================================= */}
       <style>{`
         @media print {
-          /* 1. Standard A4 Page Setup */
+          /* 1. Exact A4 Portrait Page Setup */
           @page {
             size: A4 portrait;
-            margin: 10mm 8mm;
+            margin: 8mm 6mm;
           }
 
-          /* 2. Full reset on body/html */
+          /* 2. Full reset on html and body */
           html, body, #root, #root > div {
             width: 100% !important;
             height: auto !important;
@@ -119,7 +98,15 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
             overflow: visible !important;
           }
 
-          /* 5. NEVER cut a label card in half across page boundaries */
+          /* 5. 6x7 Grid: 6 columns per row, exactly 7 rows per A4 page */
+          .findix-print-grid-42 {
+            display: grid !important;
+            grid-template-columns: repeat(6, 1fr) !important;
+            gap: 2mm !important;
+            width: 100% !important;
+          }
+
+          /* 6. Page-break pagination: Never slice any individual card */
           .print-card-avoid-break {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
@@ -139,14 +126,14 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-600 animate-pulse" />
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 font-display">
-                  Factory Print & Laser Production Sheet
+                  A4 Print Sheet (42 Codes per Page · 6 × 7 Grid)
                 </h2>
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-100 text-cyan-800">
-                  {tags.length} Codes
+                  {tags.length} Codes ({totalSheets} {totalSheets === 1 ? 'Sheet' : 'Sheets'})
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Formatted specifically for laser engraving machines (LightBurn/EzCad) and A4 sticker sheets.
+                Top sheet header · 6 columns × 7 rows per A4 page · Alphanumeric code &amp; SCAN TO RETURN.
               </p>
             </div>
 
@@ -168,7 +155,7 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
                 className="text-xs font-bold shadow-md bg-cyan-600 hover:bg-cyan-700"
               >
                 <Printer className="w-3.5 h-3.5 mr-1" />
-                <span>Print Sheet (A4)</span>
+                <span>Print A4 Sheet ({tags.length})</span>
               </Button>
 
               <button
@@ -180,109 +167,43 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
             </div>
           </div>
 
-          {/* Production Controls Bar */}
-          <div className="px-5 py-3 bg-white border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
-            
-            {/* Format Selector */}
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-700">Target Hardware:</span>
-              <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setPrintFormat('keychain')}
-                  className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                    printFormat === 'keychain'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Laser Metal Keychain (High-Contrast B&W)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPrintFormat('sticker')}
-                  className={`px-3 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
-                    printFormat === 'sticker'
-                      ? 'bg-cyan-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Weatherproof Stickers (Pack Sheet)
-                </button>
-              </div>
-            </div>
-
-            {/* Density & Alignment Toggles */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                <span>Density:</span>
-                <select
-                  value={gridDensity}
-                  onChange={(e) => setGridDensity(e.target.value)}
-                  className="px-2 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer"
-                >
-                  <option value="24">Standard (4 columns / 16-24 per A4)</option>
-                  <option value="12">Large (3 columns / 12 per A4)</option>
-                </select>
-              </div>
-
-              {printFormat === 'keychain' && (
-                <label className="flex items-center gap-1.5 cursor-pointer text-slate-600 select-none">
-                  <input
-                    type="checkbox"
-                    checked={showLaserJig}
-                    onChange={(e) => setShowLaserJig(e.target.checked)}
-                    className="rounded text-slate-900 focus:ring-0 cursor-pointer"
-                  />
-                  <span>Show Jig Guide Outline</span>
-                </label>
-              )}
-            </div>
-
-          </div>
-
           {/* Interactive Screen Preview Container */}
           <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60">
-            <div className="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
-              <div className="text-center pb-4 mb-4 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
-                <span>PREVIEW MODE · A4 SHEET</span>
+            <div className="max-w-4xl mx-auto bg-white p-5 sm:p-7 rounded-2xl shadow-sm border border-slate-200">
+              
+              {/* Preview Header */}
+              <div className="text-center pb-3 mb-4 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
+                <span>PREVIEW MODE · A4 SHEET (6 × 7 = 42 CODES/PAGE)</span>
                 <span>BATCH: {batchCode}</span>
-                <span>TOTAL: {tags.length} UNITS</span>
+                <span>TOTAL: {tags.length} CODES</span>
               </div>
 
-              {/* Render the grid inside preview */}
-              <div
-                className={`grid gap-3.5 ${
-                  gridDensity === '24'
-                    ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                    : 'grid-cols-2 sm:grid-cols-3'
-                }`}
-              >
+              {/* Render the 6-column grid inside screen preview */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-2.5">
                 {tags.map((tag, idx) => (
-                  <LabelCard
+                  <PrintCardItem
                     key={tag._id || tag.qrSlug || idx}
                     tag={tag}
-                    printFormat={printFormat}
-                    showLaserJig={showLaserJig}
-                    gridDensity={gridDensity}
                     onCopy={() => copyToClipboard(`https://findix.pk/q/${tag.qrSlug}`, tag.qrSlug)}
                     isCopied={copiedSlug === tag.qrSlug}
+                    isPrintMode={false}
                   />
                 ))}
               </div>
+
             </div>
           </div>
 
           {/* Modal Footer */}
           <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 shrink-0">
             <span className="font-mono">
-              Ready for physical printing: Click "Print Sheet (A4)" or press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300 font-semibold">Ctrl+P</kbd>
+              Format: 42 codes per A4 sheet · Zero page clipping · Click "Print A4 Sheet" or press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300 font-semibold">Ctrl+P</kbd>
             </span>
             <div className="flex items-center gap-2">
               <Button variant="secondary" size="xs" onClick={onClose} className="border-slate-300">
                 Cancel
               </Button>
-              <Button variant="primary" size="xs" onClick={handleTriggerPrint} className="bg-cyan-600 hover:bg-cyan-700">
+              <Button variant="primary" size="xs" onClick={handleTriggerPrint} className="bg-cyan-600 hover:bg-cyan-700 font-bold">
                 <Printer className="w-3.5 h-3.5 mr-1" />
                 <span>Print Document</span>
               </Button>
@@ -294,39 +215,34 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 
       {/* ========================================================= */}
       {/* 4. THE CLEAN PRINTABLE SHEET (Visible ONLY when printing)  */}
-      {/* Normal in-flow block so the browser paginates without cuts */}
+      {/* Exact 42 codes (6 x 7) per A4 page with minimal top header */}
       {/* ========================================================= */}
       <div id="findix-factory-print-sheet" className="hidden print:block bg-white text-black p-0 m-0">
         
-        {/* Minimal Factory Sheet Identification Header */}
-        <div className="text-[10px] font-mono text-black border-b border-black pb-1 mb-2.5 flex items-center justify-between print-card-avoid-break">
+        {/* Minimal Factory Sheet Single-Line Header */}
+        <div className="text-[9px] font-mono text-black border-b border-black pb-1 mb-2 flex items-center justify-between print-card-avoid-break">
           <div className="font-bold tracking-wider">
-            FINDIX PRODUCTION FACTORY SHEET · {printFormat === 'keychain' ? 'LASER METAL KEYCHAIN' : 'WEATHERPROOF QR STICKERS'}
+            FINDIX PRODUCTION FACTORY SHEET · 42 CODES (6 × 7) · {batchCode}
           </div>
           <div>
-            BATCH: {batchCode} · {tags.length} UNITS · {new Date().toLocaleDateString()}
+            TOTAL: {tags.length} UNITS · {new Date().toLocaleDateString()}
           </div>
         </div>
 
-        {/* The Clean Printable Grid */}
+        {/* The 6 x 7 Printable Grid */}
         <div
-          className={`grid gap-3 ${
-            gridDensity === '24'
-              ? 'grid-cols-4'
-              : 'grid-cols-3'
-          }`}
+          className="findix-print-grid-42"
           style={{
             width: '100%',
             display: 'grid',
+            gridTemplateColumns: 'repeat(6, 1fr)',
+            gap: '2mm',
           }}
         >
           {tags.map((tag, idx) => (
             <div key={tag._id || tag.qrSlug || idx} className="print-card-avoid-break">
-              <LabelCard
+              <PrintCardItem
                 tag={tag}
-                printFormat={printFormat}
-                showLaserJig={showLaserJig}
-                gridDensity={gridDensity}
                 isPrintMode={true}
               />
             </div>
@@ -339,137 +255,54 @@ export const AdminPrintSheetModal = ({ isOpen, onClose, tags = [], batchInfo = n
 };
 
 /**
- * Individual Label Component (Renders Laser Engraving format or Sticker format)
- * Calibrated specifically so 4 rows fit on A4 without touching the bottom boundary!
+ * Individual QR Card Item calibrated for 42 codes per A4 page (6 x 7):
+ * - Sharp QR code
+ * - Alphanumeric Code (e.g. FDX-8XNR-3CKX)
+ * - SCAN TO RETURN
  */
-const LabelCard = ({
+const PrintCardItem = ({
   tag,
-  printFormat,
-  showLaserJig = true,
-  gridDensity = '24',
   isPrintMode = false,
   onCopy,
   isCopied,
 }) => {
   const url = `https://findix.pk/q/${tag.qrSlug}`;
-  // High-resolution crisp QR code (300 DPI friendly)
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(url)}&margin=1`;
+  // High-resolution crisp QR code
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&margin=1`;
 
-  // =============================================================
-  // 1. LASER METAL KEYCHAIN TEMPLATE (Pure B&W for Laser Cutters)
-  // =============================================================
-  if (printFormat === 'keychain') {
-    return (
-      <div
-        className={`relative bg-white text-black flex flex-col items-center justify-between text-center transition-all ${
-          showLaserJig
-            ? 'border-2 border-black rounded-2xl'
-            : 'border border-dashed border-slate-300 rounded-xl'
-        } ${
-          gridDensity === '24' 
-            ? 'p-2 sm:p-2.5 h-[55mm] max-h-[55mm]' 
-            : 'p-3 h-[64mm] max-h-[64mm]'
-        } ${!isPrintMode ? 'shadow-2xs hover:border-cyan-500' : ''}`}
-        style={{
-          boxSizing: 'border-box',
-          backgroundColor: '#FFFFFF',
-          color: '#000000',
-          breakInside: 'avoid',
-          pageBreakInside: 'avoid',
-        }}
-      >
-        {/* Brand Top */}
-        <div className="w-full flex items-center justify-center pt-0.5">
-          <span className="font-display font-black text-[11px] tracking-widest text-black uppercase">
-            FINDIX
-          </span>
-        </div>
-
-        {/* Pure Contrast QR Graphic */}
-        <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center p-0.5 my-auto">
-          <img
-            src={qrImageSrc}
-            alt={tag.qrSlug}
-            className="w-full h-full object-contain filter contrast-200"
-            style={{ imageRendering: 'pixelated' }}
-            loading="eager"
-          />
-        </div>
-
-        {/* Serial Slug & Laser Alignment Instruction */}
-        <div className="w-full pb-0.5">
-          <div className="font-mono font-black text-[11px] tracking-wider text-black">
-            {tag.qrSlug}
-          </div>
-          <div className="text-[7.5px] font-mono uppercase tracking-widest text-black/80 font-bold">
-            SCAN TO RETURN
-          </div>
-        </div>
-
-        {/* Copy Button (Only on screen preview, NEVER in print) */}
-        {!isPrintMode && onCopy && (
-          <button
-            type="button"
-            onClick={onCopy}
-            className="absolute top-1 right-1 p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] cursor-pointer no-print"
-            title="Copy URL"
-          >
-            {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // =============================================================
-  // 2. WEATHERPROOF STICKER TEMPLATE (Color / Cut Guides)
-  // =============================================================
   return (
     <div
-      className={`relative bg-white flex flex-col items-center justify-between text-center rounded-2xl border border-dashed border-slate-400 transition-all ${
-        gridDensity === '24' 
-          ? 'p-2 sm:p-2.5 h-[55mm] max-h-[55mm]' 
-          : 'p-3 h-[64mm] max-h-[64mm]'
-      } ${!isPrintMode ? 'shadow-xs hover:border-cyan-500' : 'print:border-slate-400'}`}
+      className={`relative bg-white text-black flex flex-col items-center justify-between text-center border border-black rounded-lg transition-all ${
+        isPrintMode
+          ? 'h-[36.5mm] max-h-[36.5mm] p-1'
+          : 'p-2 aspect-[1/1.18] shadow-2xs hover:border-cyan-600'
+      }`}
       style={{
         boxSizing: 'border-box',
         backgroundColor: '#FFFFFF',
+        color: '#000000',
         breakInside: 'avoid',
         pageBreakInside: 'avoid',
       }}
     >
-      {/* Brand Header */}
-      <div className="flex items-center justify-between w-full px-0.5 pt-0.5">
-        <div className="flex items-center gap-1">
-          <div className="w-3.5 h-3.5 rounded-full bg-cyan-50 border border-cyan-400 flex items-center justify-center p-0.5">
-            <img src="/logo.png" alt="F" className="w-full h-full object-contain" />
-          </div>
-          <span className="font-display font-black text-[10px] tracking-wider text-slate-900">
-            FIND<span className="text-cyan-600">IX</span>
-          </span>
-        </div>
-        <span className="text-[7.5px] font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-600 font-bold uppercase">
-          STICKER
-        </span>
-      </div>
-
-      {/* QR Code */}
-      <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center p-0.5 my-auto">
+      {/* High-Resolution QR Graphic */}
+      <div className={`${isPrintMode ? 'w-[23mm] h-[23mm]' : 'w-16 h-16 sm:w-20 sm:h-20'} flex items-center justify-center p-0.5 mx-auto`}>
         <img
           src={qrImageSrc}
           alt={tag.qrSlug}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain filter contrast-200"
+          style={{ imageRendering: 'pixelated' }}
           loading="eager"
         />
       </div>
 
-      {/* Serial ID & Instructions */}
-      <div className="w-full pb-0.5 space-y-0.5">
-        <div className="font-mono font-black text-[11px] text-slate-900 tracking-wider">
+      {/* Alphanumeric Code & SCAN TO RETURN */}
+      <div className="w-full text-center leading-none space-y-0.5">
+        <div className={`font-mono font-black tracking-tight text-black ${isPrintMode ? 'text-[7.5px]' : 'text-[10px]'}`}>
           {tag.qrSlug}
         </div>
-        <div className="text-[8px] font-medium text-slate-600 leading-tight">
-          Scan with camera to link / return
+        <div className={`font-mono uppercase font-bold tracking-wider text-black ${isPrintMode ? 'text-[6px]' : 'text-[8px]'}`}>
+          SCAN TO RETURN
         </div>
       </div>
 
@@ -478,10 +311,10 @@ const LabelCard = ({
         <button
           type="button"
           onClick={onCopy}
-          className="absolute top-1.5 right-1.5 p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] cursor-pointer no-print"
+          className="absolute top-1 right-1 p-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[9px] cursor-pointer no-print"
           title="Copy URL"
         >
-          {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+          {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
         </button>
       )}
     </div>

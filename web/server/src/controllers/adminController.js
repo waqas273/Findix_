@@ -212,6 +212,92 @@ export const getAllTags = async (req, res) => {
 };
 
 /**
+ * @desc    Delete a single dummy/unclaimed QR tag
+ * @route   DELETE /api/admin/qr/tags/:id
+ * @access  Private (Admin)
+ */
+export const deleteTagAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (mongoose.connection.readyState === 1) {
+      const tag = await QRItem.findOne({
+        $or: [
+          ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : []),
+          { qrSlug: id }
+        ]
+      });
+
+      if (!tag) {
+        return errorResponse(res, 404, 'QR Tag not found in database');
+      }
+
+      // Security check: only allow deletion of unclaimed (dummy) tags!
+      if (tag.status === 'claimed' || tag.ownerId) {
+        return errorResponse(res, 400, 'Security Policy: Cannot delete a tag that has already been claimed by a buyer.');
+      }
+
+      await QRItem.findByIdAndDelete(tag._id);
+      return successResponse(res, 200, `Dummy tag ${tag.qrSlug} deleted successfully`);
+    }
+
+    simulatedManufacturedTags = simulatedManufacturedTags.filter(
+      (t) => t.qrSlug !== id && t._id !== id
+    );
+
+    return successResponse(res, 200, `Tag ${id} deleted successfully`);
+  } catch (error) {
+    return errorResponse(res, 500, 'Failed to delete QR tag', error.message);
+  }
+};
+
+/**
+ * @desc    Bulk delete dummy/unclaimed QR tags (multi-select / select all)
+ * @route   POST /api/admin/qr/tags/bulk-delete
+ * @access  Private (Admin)
+ */
+export const bulkDeleteTagsAdmin = async (req, res) => {
+  try {
+    const { tagIds } = req.body;
+
+    if (!tagIds || !Array.isArray(tagIds) || tagIds.length === 0) {
+      return errorResponse(res, 400, 'Please provide an array of tag IDs to delete');
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const deleteResult = await QRItem.deleteMany({
+        $and: [
+          {
+            $or: [
+              { _id: { $in: tagIds.filter((id) => mongoose.Types.ObjectId.isValid(id)) } },
+              { qrSlug: { $in: tagIds } }
+            ]
+          },
+          { status: 'unclaimed' },
+          { $or: [{ ownerId: null }, { ownerId: { $exists: false } }] }
+        ]
+      });
+
+      return successResponse(res, 200, `Successfully deleted ${deleteResult.deletedCount} dummy QR tags`, {
+        deletedCount: deleteResult.deletedCount,
+      });
+    }
+
+    const prevCount = simulatedManufacturedTags.length;
+    simulatedManufacturedTags = simulatedManufacturedTags.filter(
+      (t) => !tagIds.includes(t.qrSlug) && !tagIds.includes(t._id)
+    );
+    const deletedCount = prevCount - simulatedManufacturedTags.length;
+
+    return successResponse(res, 200, `Successfully deleted ${deletedCount} dummy QR tags`, {
+      deletedCount,
+    });
+  } catch (error) {
+    return errorResponse(res, 500, 'Failed to execute bulk tag deletion', error.message);
+  }
+};
+
+/**
  * @desc    Get all orders for admin pipeline manager
  * @route   GET /api/admin/orders
  * @access  Private (Admin)

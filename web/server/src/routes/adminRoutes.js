@@ -3,6 +3,8 @@ import {
   getGlobalMetrics, 
   bulkGenerateQRTags, 
   getAllTags, 
+  deleteTagAdmin,
+  bulkDeleteTagsAdmin,
   getAllOrdersAdmin, 
   updateOrderPipelineAdmin, 
   createProductAdmin, 
@@ -30,10 +32,14 @@ router.get('/users', getAllUsersAdmin);
 router.delete('/users/:id', deleteUserAdmin);
 router.patch('/users/:id/role', updateUserRoleAdmin);
 
-// Telemetry & Batch (Optional)
+// Telemetry & Batch QR Lifecycle
 router.get('/metrics', getGlobalMetrics);
 router.post('/qr/bulk', bulkGenerateQRTags);
 router.get('/qr/tags', getAllTags);
+router.delete('/qr/tags/:id', deleteTagAdmin);
+router.post('/qr/tags/bulk-delete', bulkDeleteTagsAdmin);
+
+// Order Pipeline
 router.get('/orders', getAllOrdersAdmin);
 router.patch('/orders/:id/status', updateOrderPipelineAdmin);
 
