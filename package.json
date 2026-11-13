@@ -1,0 +1,13 @@
+{
+  "name": "findix-root",
+  "version": "1.0.0",
+  "description": "Findix - Smart QR-Recovery Platform ('Lost, but never gone')",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix web",
+    "dev:server": "npm run dev:server --prefix web",
+    "dev:client": "npm run dev:client --prefix web",
+    "build": "npm run build:client --prefix web",
+    "start": "npm run dev --prefix web"
+  }
+}
