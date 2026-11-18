@@ -122,10 +122,14 @@ app.use('/api/q', qrLimiter);
 app.use(async (req, res, next) => {
   try {
     await connectDB();
+    next();
   } catch (err) {
-    console.error('[DB Middleware Warning]', err.message);
+    console.error('[DB Middleware Error]', err.message);
+    return res.status(500).json({
+      success: false,
+      message: `Database connection error: ${err.message}. Make sure 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access.`,
+    });
   }
-  next();
 });
 
 // Root health & meta route

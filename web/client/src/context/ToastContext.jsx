@@ -54,32 +54,32 @@ export const ToastProvider = ({ children }) => {
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto rounded-2xl p-4 shadow-2xl backdrop-blur-2xl border transition-all duration-300 animate-scale-up flex items-start gap-3 ${
+              className={`pointer-events-auto rounded-2xl p-4 shadow-2xl border transition-all duration-300 animate-scale-up flex items-start gap-3 bg-slate-900 ${
                 isSuccess
-                  ? 'bg-obsidian-950/95 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] text-white'
+                  ? 'border-emerald-500 shadow-[0_10px_30px_rgba(16,185,129,0.25)] text-white'
                   : isError
-                  ? 'bg-obsidian-950/95 border-neon-rose/40 shadow-[0_0_20px_rgba(244,63,94,0.2)] text-white'
-                  : 'bg-obsidian-950/95 border-neon-cyan/40 shadow-[0_0_20px_rgba(0,242,254,0.15)] text-white'
+                  ? 'border-rose-500 shadow-[0_10px_30px_rgba(244,63,94,0.3)] text-white'
+                  : 'border-cyan-500 shadow-[0_10px_30px_rgba(8,145,178,0.25)] text-white'
               }`}
             >
               {isSuccess && (
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
               )}
               {isError && (
-                <AlertCircle className="w-5 h-5 text-neon-rose shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
               )}
               {!isSuccess && !isError && (
-                <Info className="w-5 h-5 text-neon-cyan shrink-0 mt-0.5" />
+                <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
               )}
 
-              <div className="space-y-0.5 flex-1 pr-1">
+              <div className="space-y-1 flex-1 pr-1">
                 {toast.title && (
-                  <h4 className="text-xs sm:text-sm font-bold tracking-wide">
+                  <h4 className="text-xs sm:text-sm font-bold text-white tracking-wide">
                     {toast.title}
                   </h4>
                 )}
                 {toast.message && (
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">
                     {toast.message}
                   </p>
                 )}

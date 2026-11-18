@@ -3,9 +3,11 @@ import { User } from '../models/User.js';
 import { sendTokenResponse, generateToken } from '../utils/generateToken.js';
 import { successResponse, errorResponse } from '../utils/apiResponse.js';
 
-const client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID || '898184524690-r2aj4b7ujansaka0hr33dgsju2c7e900.apps.googleusercontent.com'
-);
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID ||
+  '898184524690-r2aj4b7ujansaka0hr33dgsju2c7e900.apps.googleusercontent.com';
+
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -95,14 +97,12 @@ export const googleAuth = async (req, res) => {
 
     let payload;
     try {
-      // 1. Verify ID token via Google OAuth2 client if client ID is configured
-      if (process.env.GOOGLE_CLIENT_ID) {
-        const ticket = await client.verifyIdToken({
-          idToken: tokenToVerify,
-          audience: process.env.GOOGLE_CLIENT_ID,
-        });
-        payload = ticket.getPayload();
-      }
+      // 1. Verify ID token via Google OAuth2 client with configured client ID
+      const ticket = await client.verifyIdToken({
+        idToken: tokenToVerify,
+        audience: GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
     } catch (verifyError) {
       console.warn('Google token verification fallback:', verifyError.message);
     }

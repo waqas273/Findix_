@@ -18,12 +18,13 @@ export const connectDB = async () => {
   }
   try {
     const conn = await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 6000,
+      bufferCommands: false,
     });
     console.log(`[Findix Database] MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.warn(`[Findix Database Warning] MongoDB connection failed: ${error.message}`);
-    console.warn(`[Findix Database Note] Make sure local MongoDB is active or specify a valid MONGO_URI in .env`);
+    console.error(`[Findix Database Error] MongoDB connection failed: ${error.message}`);
+    throw new Error(`Database connection error: ${error.message}`);
   }
 };
 
