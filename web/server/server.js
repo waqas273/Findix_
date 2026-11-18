@@ -66,9 +66,6 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  })
-);
 
 // 4. Body Parsers with size limits
 app.use(express.json({ limit: '10mb' }));
