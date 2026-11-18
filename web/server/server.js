@@ -29,6 +29,7 @@ const app = express();
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     contentSecurityPolicy: false, // Allows flexible CDN assets for photos
   })
 );

@@ -137,19 +137,19 @@ export const DashboardPage = () => {
     <div className="space-y-8 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
       
       {/* 1. EXECUTIVE WELCOME BANNER */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-white/[0.08] p-6 sm:p-8 backdrop-blur-2xl shadow-2xl overflow-hidden">
-        <div className="absolute -right-16 -top-16 w-64 h-64 bg-neon-cyan/10 blur-[90px] rounded-full pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-neon-teal/10 blur-[90px] rounded-full pointer-events-none" />
+      <div className="relative rounded-3xl bg-slate-900 text-white border border-slate-800 p-6 sm:p-8 shadow-xl overflow-hidden">
+        <div className="absolute -right-16 -top-16 w-64 h-64 bg-cyan-500/15 blur-[90px] rounded-full pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-teal-500/15 blur-[90px] rounded-full pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neon-cyan/10 text-neon-cyan text-xs font-mono font-semibold border border-neon-cyan/30 shadow-neon-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold border border-cyan-400/40 shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5" /> VERIFIED OWNER WORKSPACE
             </div>
             <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-white tracking-tight">
-              Welcome back, <span className="text-neon-cyan">{user?.name || 'Owner'}</span>
+              Welcome back, <span className="text-cyan-400">{user?.name || 'Owner'}</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
               Your personal command center for monitoring recovery tags, laser-etched hardware, and encrypted finder chats.
             </p>
           </div>
@@ -160,7 +160,7 @@ export const DashboardPage = () => {
               variant="primary"
               size="lg"
               onClick={() => setIsActivateModalOpen(true)}
-              className="font-bold shadow-neon-sm"
+              className="font-bold shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Register / Claim Tag</span>
@@ -171,7 +171,7 @@ export const DashboardPage = () => {
               size="lg"
               onClick={fetchItems}
               disabled={loading}
-              className="text-slate-300 hover:text-white"
+              className="bg-slate-800 hover:bg-slate-700 text-white border-slate-700 cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -184,64 +184,64 @@ export const DashboardPage = () => {
         
         {/* Shortcut 1: Store */}
         <Link to="/store" className="group block">
-          <Card className="p-4 sm:p-5 bg-obsidian-900/80 hover:bg-obsidian-850 border-slate-800 hover:border-neon-cyan/40 transition-all duration-300 h-full flex flex-col justify-between space-y-3">
+          <Card className="p-4 sm:p-5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-cyan-400 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 flex items-center justify-center text-neon-cyan group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 group-hover:scale-105 transition-transform">
                 <ShoppingBag className="w-5 h-5" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-neon-cyan group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-cyan-600 group-hover:translate-x-0.5 transition-all" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white group-hover:text-neon-cyan transition-colors">Hardware Store</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Order titanium keychains & decals</p>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-600 transition-colors">Hardware Store</h3>
+              <p className="text-[12px] text-slate-500 mt-0.5">Order titanium keychains & decals</p>
             </div>
           </Card>
         </Link>
 
         {/* Shortcut 2: Orders */}
         <Link to="/dashboard/orders" className="group block">
-          <Card className="p-4 sm:p-5 bg-obsidian-900/80 hover:bg-obsidian-850 border-slate-800 hover:border-neon-teal/40 transition-all duration-300 h-full flex flex-col justify-between space-y-3">
+          <Card className="p-4 sm:p-5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-teal-400 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-neon-teal/10 border border-neon-teal/30 flex items-center justify-center text-neon-teal group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600 group-hover:scale-105 transition-transform">
                 <Package className="w-5 h-5" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-neon-teal group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white group-hover:text-neon-teal transition-colors">Orders & Tracking</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Track fabrication & delivery</p>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-teal-600 transition-colors">Orders & Tracking</h3>
+              <p className="text-[12px] text-slate-500 mt-0.5">Track fabrication & delivery</p>
             </div>
           </Card>
         </Link>
 
         {/* Shortcut 3: Messages */}
         <Link to="/dashboard/messages" className="group block">
-          <Card className="p-4 sm:p-5 bg-obsidian-900/80 hover:bg-obsidian-850 border-slate-800 hover:border-emerald-400/40 transition-all duration-300 h-full flex flex-col justify-between space-y-3">
+          <Card className="p-4 sm:p-5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-emerald-400 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-105 transition-transform">
                 <MessageSquare className="w-5 h-5" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">Finder Messages</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">End-to-end encrypted chat</p>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Finder Messages</h3>
+              <p className="text-[12px] text-slate-500 mt-0.5">End-to-end encrypted chat</p>
             </div>
           </Card>
         </Link>
 
         {/* Shortcut 4: Scanner */}
         <Link to="/scan" className="group block">
-          <Card className="p-4 sm:p-5 bg-obsidian-900/80 hover:bg-obsidian-850 border-slate-800 hover:border-purple-400/40 transition-all duration-300 h-full flex flex-col justify-between space-y-3">
+          <Card className="p-4 sm:p-5 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-purple-400 shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col justify-between space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 group-hover:scale-105 transition-transform">
                 <QrCode className="w-5 h-5" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">Scan QR Code</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Resolve tag or camera scanner</p>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-purple-600 transition-colors">Scan QR Code</h3>
+              <p className="text-[12px] text-slate-500 mt-0.5">Resolve tag or camera scanner</p>
             </div>
           </Card>
         </Link>
@@ -250,28 +250,28 @@ export const DashboardPage = () => {
 
       {/* 3. LIVE METRICS GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="p-4 sm:p-5 bg-obsidian-950/80 border-slate-800 space-y-1">
-          <span className="text-[10px] sm:text-xs font-mono text-slate-400 uppercase tracking-wider block">Protected Assets</span>
-          <div className="text-2xl sm:text-3xl font-display font-black text-white">{items.length}</div>
-          <span className="text-[10px] text-slate-500 block">Registered hardware tags</span>
+        <Card className="p-4 sm:p-5 bg-white border border-slate-200/90 shadow-sm space-y-1">
+          <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider block">Protected Assets</span>
+          <div className="text-2xl sm:text-3xl font-display font-black text-slate-900">{items.length}</div>
+          <span className="text-[11px] text-slate-500 block">Registered hardware tags</span>
         </Card>
 
-        <Card className="p-4 sm:p-5 bg-obsidian-950/80 border-slate-800 space-y-1">
-          <span className="text-[10px] sm:text-xs font-mono text-emerald-400 uppercase tracking-wider block">Safe & Active</span>
-          <div className="text-2xl sm:text-3xl font-display font-black text-emerald-400">{safeCount}</div>
-          <span className="text-[10px] text-slate-500 block">Normal protection active</span>
+        <Card className="p-4 sm:p-5 bg-white border border-slate-200/90 shadow-sm space-y-1">
+          <span className="text-[11px] font-mono font-bold text-emerald-600 uppercase tracking-wider block">Safe & Active</span>
+          <div className="text-2xl sm:text-3xl font-display font-black text-emerald-600">{safeCount}</div>
+          <span className="text-[11px] text-slate-500 block">Normal protection active</span>
         </Card>
 
-        <Card className="p-4 sm:p-5 bg-obsidian-950/80 border-slate-800 space-y-1">
-          <span className="text-[10px] sm:text-xs font-mono text-neon-rose uppercase tracking-wider block">Lost Broadcasts</span>
-          <div className="text-2xl sm:text-3xl font-display font-black text-neon-rose">{lostCount}</div>
-          <span className="text-[10px] text-slate-500 block">Active recovery banners</span>
+        <Card className="p-4 sm:p-5 bg-white border border-slate-200/90 shadow-sm space-y-1">
+          <span className="text-[11px] font-mono font-bold text-rose-600 uppercase tracking-wider block">Lost Broadcasts</span>
+          <div className="text-2xl sm:text-3xl font-display font-black text-rose-600">{lostCount}</div>
+          <span className="text-[11px] text-slate-500 block">Active recovery banners</span>
         </Card>
 
-        <Card className="p-4 sm:p-5 bg-obsidian-950/80 border-slate-800 space-y-1">
-          <span className="text-[10px] sm:text-xs font-mono text-neon-cyan uppercase tracking-wider block">Relay Cryptography</span>
-          <div className="text-2xl sm:text-3xl font-display font-black text-neon-cyan">256-bit</div>
-          <span className="text-[10px] text-slate-500 block">Zero personal data leaks</span>
+        <Card className="p-4 sm:p-5 bg-white border border-slate-200/90 shadow-sm space-y-1">
+          <span className="text-[11px] font-mono font-bold text-cyan-700 uppercase tracking-wider block">Relay Cryptography</span>
+          <div className="text-2xl sm:text-3xl font-display font-black text-cyan-700">256-bit</div>
+          <span className="text-[11px] text-slate-500 block">Zero personal data leaks</span>
         </Card>
       </div>
 
@@ -279,7 +279,7 @@ export const DashboardPage = () => {
       <div className="space-y-4">
         
         {/* Filter & Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-obsidian-900/90 border border-slate-800 backdrop-blur-xl">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
           
           {/* Status Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
@@ -294,8 +294,8 @@ export const DashboardPage = () => {
                 onClick={() => setStatusFilter(tab.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   statusFilter === tab.id
-                    ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40 shadow-neon-sm font-bold'
-                    : 'bg-obsidian-950 text-slate-400 hover:text-white border border-slate-800'
+                    ? 'bg-cyan-50 text-cyan-700 border border-cyan-300 shadow-sm font-bold'
+                    : 'bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 {tab.label}
@@ -305,13 +305,13 @@ export const DashboardPage = () => {
 
           {/* Search Box */}
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name or slug..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-obsidian-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:bg-white transition-colors"
             />
           </div>
 
@@ -321,18 +321,18 @@ export const DashboardPage = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-56 rounded-3xl bg-obsidian-900/60 border border-slate-800 animate-pulse" />
+              <div key={i} className="h-56 rounded-3xl bg-slate-100 border border-slate-200 animate-pulse" />
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
           /* Empty State */
-          <div className="text-center py-16 px-4 space-y-4 rounded-3xl bg-obsidian-900/40 border border-slate-800/80 backdrop-blur-md">
-            <div className="w-16 h-16 rounded-2xl bg-obsidian-950 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto shadow-inner">
-              <QrCode className="w-8 h-8 text-neon-cyan" />
+          <div className="text-center py-16 px-4 space-y-4 rounded-3xl bg-white border border-slate-200 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 mx-auto shadow-sm">
+              <QrCode className="w-8 h-8 text-cyan-600" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">No Protected Tags Found</h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-slate-900">No Protected Tags Found</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
                 {items.length === 0
                   ? 'You have not claimed any hardware tags yet. Register your first physical tag or order tags from the store.'
                   : 'No tags match your search or filter selection.'}
@@ -358,10 +358,10 @@ export const DashboardPage = () => {
               return (
                 <Card
                   key={item._id}
-                  className={`p-5 space-y-4 border transition-all duration-300 backdrop-blur-xl ${
+                  className={`p-5 space-y-4 border transition-all duration-300 shadow-sm ${
                     isLost
-                      ? 'bg-rose-950/20 border-rose-500/40 shadow-[0_0_25px_rgba(244,63,94,0.15)]'
-                      : 'bg-obsidian-950/80 border-slate-800 hover:border-slate-700'
+                      ? 'bg-rose-50/40 border-rose-200 shadow-md ring-1 ring-rose-200'
+                      : 'bg-white border-slate-200 hover:border-cyan-300 hover:shadow-md'
                   }`}
                 >
                   
@@ -369,19 +369,19 @@ export const DashboardPage = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-11 h-11 rounded-2xl p-0.5 border flex items-center justify-center shrink-0 ${
-                        isLost ? 'border-rose-500/40 bg-rose-500/10' : 'border-neon-cyan/30 bg-neon-cyan/10'
+                        isLost ? 'border-rose-300 bg-rose-50' : 'border-cyan-200 bg-cyan-50'
                       }`}>
                         {item.itemImage?.url ? (
                           <img src={item.itemImage.url} alt="" className="w-full h-full object-cover rounded-[14px]" />
                         ) : (
-                          <QrCode className={`w-5 h-5 ${isLost ? 'text-neon-rose' : 'text-neon-cyan'}`} />
+                          <QrCode className={`w-5 h-5 ${isLost ? 'text-rose-600' : 'text-cyan-600'}`} />
                         )}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white truncate max-w-[150px]">
+                        <h4 className="text-sm font-bold text-slate-900 truncate max-w-[150px]">
                           {item.itemName || 'Protected Item'}
                         </h4>
-                        <span className="text-[11px] font-mono text-slate-400 block truncate">
+                        <span className="text-[11px] font-mono text-slate-500 block truncate">
                           {item.qrSlug}
                         </span>
                       </div>
@@ -394,22 +394,22 @@ export const DashboardPage = () => {
 
                   {/* Return Bounty / Reward Note */}
                   {item.returnRewardNote && (
-                    <div className="p-2.5 rounded-xl bg-obsidian-900/90 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-700 flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span className="truncate">{item.returnRewardNote}</span>
                     </div>
                   )}
 
                   {/* 1-Click Status Switch */}
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-400">Recovery Status:</span>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-500">Recovery Status:</span>
                     <button
                       type="button"
                       onClick={() => toggleLostStatus(item)}
                       className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isLost
-                          ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40'
-                          : 'bg-rose-500/20 text-neon-rose hover:bg-rose-500/30 border border-rose-500/40'
+                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300'
+                          : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300'
                       }`}
                     >
                       {isLost ? 'Mark as SAFE' : 'Mark as LOST'}
@@ -423,13 +423,13 @@ export const DashboardPage = () => {
                     <button
                       type="button"
                       onClick={() => handleCopyScanUrl(item.qrSlug)}
-                      className="p-2 rounded-xl bg-obsidian-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[11px] font-semibold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       title="Copy Public Finder Link"
                     >
                       {copiedSlug === item.qrSlug ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-slate-400" />
+                        <Copy className="w-3.5 h-3.5 text-slate-500" />
                       )}
                       <span>{copiedSlug === item.qrSlug ? 'Copied' : 'Link'}</span>
                     </button>
@@ -438,10 +438,10 @@ export const DashboardPage = () => {
                     <Link
                       to={`/q/${item.qrSlug}`}
                       target="_blank"
-                      className="p-2 rounded-xl bg-obsidian-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+                      className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[11px] font-semibold text-slate-700 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-colors"
                       title="Preview Public Scan Portal"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
                       <span>Preview</span>
                     </Link>
 
@@ -449,7 +449,7 @@ export const DashboardPage = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedItemForEdit(item)}
-                      className="p-2 rounded-xl bg-obsidian-900 hover:bg-neon-cyan/10 border border-slate-800 hover:border-neon-cyan/30 text-[11px] font-semibold text-slate-300 hover:text-neon-cyan flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl bg-slate-50 hover:bg-cyan-50 border border-slate-200 hover:border-cyan-300 text-[11px] font-semibold text-slate-700 hover:text-cyan-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       title="Configure Tag Settings"
                     >
                       <Settings className="w-3.5 h-3.5" />
