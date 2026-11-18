@@ -12,6 +12,10 @@ dotenv.config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://findixqr_db_user:wU3yD4RFvMdgL5G3@cluster0.j2s0io9.mongodb.net/findix_db?retryWrites=true&w=majority&appName=Cluster0';
 
 export const connectDB = async () => {
+  // If already connected, reuse existing connection (crucial for Serverless / Vercel)
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
   try {
     const conn = await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 10000,

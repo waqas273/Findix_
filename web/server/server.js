@@ -110,6 +110,16 @@ const qrLimiter = rateLimit({
 });
 app.use('/api/q', qrLimiter);
 
+// Ensure MongoDB is connected on every invocation (crucial for Serverless/Vercel)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('[DB Middleware Warning]', err.message);
+  }
+  next();
+});
+
 // Root health & meta route
 app.get('/', (req, res) => {
   res.json({
@@ -122,8 +132,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// Mount Central API Router
+// Mount Central API Router under /api AND fallback root for Vercel Serverless
 app.use('/api', apiRouter);
+app.use(apiRouter);
 
 // Error Handling Middlewares
 app.use(notFound);
@@ -131,14 +142,17 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 
-const server = app.listen(PORT, () => {
-  console.log(`[Findix Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`[Findix Server] Health endpoint ready at http://localhost:${PORT}/api/health`);
-});
+// Only start standalone HTTP server in non-serverless environments (local dev)
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`[Findix Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`[Findix Server] Health endpoint ready at http://localhost:${PORT}/api/health`);
+  });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error(`[Findix Error] Unhandled Rejection: ${err.message}`);
-});
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err) => {
+    console.error(`[Findix Error] Unhandled Rejection: ${err.message}`);
+  });
+}
 
 export default app;

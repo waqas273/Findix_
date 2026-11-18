@@ -3,7 +3,9 @@ import { User } from '../models/User.js';
 import { sendTokenResponse, generateToken } from '../utils/generateToken.js';
 import { successResponse, errorResponse } from '../utils/apiResponse.js';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID || '898184524690-r2aj4b7ujansaka0hr33dgsju2c7e900.apps.googleusercontent.com'
+);
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
