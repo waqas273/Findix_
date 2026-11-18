@@ -20,8 +20,7 @@ import { connectDB } from './src/config/db.js';
 import apiRouter from './src/routes/apiRouter.js';
 import { notFound, errorHandler } from './src/middlewares/errorHandler.js';
 
-// Connect to MongoDB Atlas
-connectDB();
+// Database connection is managed via cached promise middleware for serverless safety
 
 
 const app = express();
