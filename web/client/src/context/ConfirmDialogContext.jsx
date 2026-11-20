@@ -107,24 +107,15 @@ export const ConfirmDialogProvider = ({ children }) => {
     <ConfirmDialogContext.Provider value={{ confirm }}>
       {children}
 
-      {/* Custom High-Contrast Obsidian Confirmation Modal */}
+      {/* Custom Confirmation Modal */}
       {dialogState.isOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-obsidian-950/85 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
           
           <div 
-            className="w-full max-w-md rounded-3xl bg-obsidian-950 border border-slate-800 p-6 sm:p-7 shadow-2xl space-y-5 animate-scale-up relative overflow-hidden backdrop-blur-2xl"
+            className="w-full max-w-md rounded-3xl bg-white border border-slate-200 p-6 sm:p-7 shadow-2xl space-y-5 animate-scale-up relative overflow-hidden"
             role="dialog"
             aria-modal="true"
           >
-            {/* Top decorative ambient glow */}
-            <div className={`absolute -top-12 -right-12 w-36 h-36 blur-[60px] rounded-full pointer-events-none ${
-              dialogState.variant === 'danger'
-                ? 'bg-rose-500/20'
-                : dialogState.variant === 'warning'
-                ? 'bg-amber-500/20'
-                : 'bg-neon-cyan/20'
-            }`} />
-
             {/* Header: Icon + Title */}
             <div className="flex items-start gap-4">
               <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${getIconContainerStyle()}`}>
@@ -132,23 +123,23 @@ export const ConfirmDialogProvider = ({ children }) => {
               </div>
 
               <div className="space-y-1 pt-0.5 min-w-0 flex-1">
-                <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-tight">
+                <h3 className="text-base sm:text-lg font-display font-bold text-slate-900 tracking-tight">
                   {dialogState.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                   {dialogState.message}
                 </p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/80">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
               <Button
                 type="button"
                 variant="ghost"
                 size="md"
                 onClick={handleCancel}
-                className="text-xs sm:text-sm text-slate-300 hover:text-white"
+                className="text-xs sm:text-sm text-slate-600 hover:text-slate-900"
               >
                 {dialogState.cancelText}
               </Button>
@@ -158,7 +149,7 @@ export const ConfirmDialogProvider = ({ children }) => {
                 variant={dialogState.variant === 'danger' ? 'danger' : 'primary'}
                 size="md"
                 onClick={handleConfirm}
-                className="text-xs sm:text-sm font-bold shadow-md min-w-[120px]"
+                className="text-xs sm:text-sm font-bold shadow-sm min-w-[120px]"
               >
                 <span>{dialogState.confirmText}</span>
               </Button>

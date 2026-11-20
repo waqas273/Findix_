@@ -29,26 +29,26 @@ export class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-obsidian-950 flex items-center justify-center p-4 text-center">
-          <div className="max-w-md w-full p-8 rounded-3xl bg-obsidian-900 border border-slate-800 space-y-6 shadow-2xl backdrop-blur-2xl">
-            <div className="w-16 h-16 rounded-3xl bg-neon-rose/10 border border-neon-rose/30 flex items-center justify-center mx-auto text-neon-rose shadow-[0_0_20px_rgba(255,0,127,0.2)]">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-center">
+          <div className="max-w-md w-full p-8 rounded-3xl bg-white border border-slate-200 space-y-6 shadow-xl">
+            <div className="w-16 h-16 rounded-3xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600 shadow-sm">
               <ShieldAlert className="w-8 h-8" />
             </div>
 
             <div className="space-y-2">
-              <span className="text-xs font-mono text-neon-rose uppercase tracking-widest font-bold">
+              <span className="text-xs font-mono text-rose-600 uppercase tracking-widest font-bold">
                 APPLICATION SAFETY SHIELD
               </span>
-              <h2 className="text-2xl font-display font-bold text-white">
+              <h2 className="text-2xl font-display font-bold text-slate-900">
                 Something Went Wrong
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 An unexpected interface error occurred. The Findix security shield has caught the exception to protect your session data.
               </p>
             </div>
 
             {process.env.NODE_ENV !== 'production' && this.state.error && (
-              <div className="p-3 rounded-xl bg-obsidian-950 border border-slate-800 text-left overflow-x-auto max-h-32 text-[11px] font-mono text-neon-rose">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-left overflow-x-auto max-h-32 text-[11px] font-mono text-rose-700">
                 {this.state.error.toString()}
               </div>
             )}

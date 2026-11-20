@@ -10,7 +10,7 @@ export const Hero3DKeychain = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/10 via-neon-teal/5 to-transparent blur-[50px] rounded-full pointer-events-none" />
 
       {/* Titanium Keychain Card */}
-      <div className="relative rounded-[28px] p-[1.5px] bg-gradient-to-b from-slate-700 via-slate-800 to-obsidian-950 shadow-2xl border border-slate-750/70">
+      <div className="relative rounded-[28px] p-[1.5px] bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 shadow-2xl border border-slate-750/70">
         
         {/* Keychain Body */}
         <div className="relative rounded-[27px] bg-gradient-to-b from-[#141A23] via-[#0E131C] to-[#090C12] p-6 sm:p-7 overflow-hidden">
@@ -24,8 +24,8 @@ export const Hero3DKeychain = () => {
               {/* Outer Ring */}
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-600 p-[2px]">
                 {/* Hole cutout */}
-                <div className="w-full h-full rounded-full bg-obsidian-950 flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-obsidian-900 border border-slate-800" />
+                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800" />
                 </div>
               </div>
               <div>
@@ -45,7 +45,7 @@ export const Hero3DKeychain = () => {
           <div className="my-6 relative flex flex-col items-center">
             
             {/* Outer Protective Rim */}
-            <div className="relative p-4 rounded-2xl bg-obsidian-950 border border-slate-800">
+            <div className="relative p-4 rounded-2xl bg-slate-950 border border-slate-800">
               
               {/* Laser-Etched QR Code Graphic */}
               <div className="w-40 h-40 sm:w-44 sm:h-44 relative rounded-xl p-2 bg-[#0A0E17] border border-slate-800 flex items-center justify-center">
@@ -88,7 +88,7 @@ export const Hero3DKeychain = () => {
 
                 {/* Central Circular Brand Emblem */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-obsidian-950 border border-slate-700/80 flex items-center justify-center shadow-lg p-1">
+                  <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center shadow-lg p-1">
                     <img src="/logo.png" alt="Findix" className="w-full h-full object-cover rounded-full" />
                   </div>
                 </div>

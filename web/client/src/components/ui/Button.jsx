@@ -20,17 +20,17 @@ export const Button = ({
 
   const variants = {
     primary:
-      'bg-cyan-gradient text-obsidian-950 font-semibold hover:shadow-neon-cyan hover:brightness-110 active:brightness-95',
+      'bg-cyan-600 text-white font-semibold hover:bg-cyan-700 active:bg-cyan-800 shadow-sm transition-all',
     secondary:
-      'bg-obsidian-800 text-slate-200 border border-slate-800 hover:border-slate-700 hover:bg-obsidian-750 hover:text-white',
+      'bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 hover:text-slate-900 transition-all',
     outline:
-      'border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/10 hover:border-neon-cyan active:bg-neon-cyan/20',
+      'border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 active:bg-slate-100 transition-all shadow-sm',
     ghost:
-      'text-slate-400 hover:text-white hover:bg-slate-800/50 active:bg-slate-800/80',
+      'text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-all',
     danger:
-      'bg-neon-rose text-white hover:bg-rose-600 active:bg-rose-700 hover:shadow-[0_0_15px_rgba(244,63,94,0.4)]',
+      'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm transition-all',
     glow:
-      'bg-obsidian-900 text-neon-cyan border border-neon-cyan/50 shadow-neon-sm hover:shadow-neon-cyan hover:bg-neon-cyan/10',
+      'bg-cyan-50 text-cyan-700 border border-cyan-300 hover:bg-cyan-100 transition-all',
   };
 
   const sizes = {

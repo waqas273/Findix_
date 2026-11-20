@@ -30,8 +30,8 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ defa
 const PageLoader = () => (
   <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
     <div className="relative flex items-center justify-center w-14 h-14">
-      <div className="absolute inset-0 rounded-full border-2 border-slate-700 border-t-neon-cyan animate-spin" />
-      <div className="w-10 h-10 rounded-full bg-obsidian-950 p-1 border border-slate-800 flex items-center justify-center">
+      <div className="absolute inset-0 rounded-full border-2 border-slate-200 border-t-cyan-600 animate-spin" />
+      <div className="w-10 h-10 rounded-full bg-white p-1 border border-slate-200 shadow-sm flex items-center justify-center">
         <img src="/logo.png" alt="Findix" className="w-full h-full object-cover rounded-full" />
       </div>
     </div>

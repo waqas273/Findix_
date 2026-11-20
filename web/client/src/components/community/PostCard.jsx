@@ -26,17 +26,17 @@ import { useConfirm } from '../../context/ConfirmDialogContext';
 // ── Tag Badge helper ──────────────────────────────────────────────
 const TagBadge = ({ tag }) => {
   if (tag === 'Lost Alert') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-rose-500/10 text-rose-400 border border-rose-500/25">
-      <AlertTriangle className="w-2.5 h-2.5" /> Lost
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200">
+      <AlertTriangle className="w-2.5 h-2.5 text-rose-600" /> Lost
     </span>
   );
   if (tag === 'Found Alert') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-      <Sparkles className="w-2.5 h-2.5" /> Found
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <Sparkles className="w-2.5 h-2.5 text-emerald-600" /> Found
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] text-slate-400 bg-obsidian-800 border border-slate-700">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200">
       Discuss
     </span>
   );
@@ -63,10 +63,10 @@ const Avatar = ({ src, name, size = 'md' }) => {
       : 'w-9 h-9 text-xs';
 
   return (
-    <div className={`${cls} rounded-full bg-obsidian-800 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden`}>
+    <div className={`${cls} rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden`}>
       {src
         ? <img src={src} alt={name || ''} className="w-full h-full object-cover" />
-        : <span className="font-bold text-neon-cyan">{name?.[0]?.toUpperCase() || 'U'}</span>
+        : <span className="font-bold text-cyan-700">{name?.[0]?.toUpperCase() || 'U'}</span>
       }
     </div>
   );
@@ -270,26 +270,26 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
         <div className="flex items-start gap-2">
           <Avatar src={comment.authorAvatar} name={comment.authorName} size="sm" />
 
-          <div className="flex-1 min-w-0 bg-obsidian-800/70 border border-slate-800 rounded-lg px-3 py-2 space-y-1">
+          <div className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 space-y-1">
             {/* Header */}
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                <span className="text-[11px] font-bold text-white truncate">{comment.authorName}</span>
+                <span className="text-[11px] font-bold text-slate-900 truncate">{comment.authorName}</span>
                 {comment.authorCity && (
                   <span className="text-[10px] text-slate-500 font-mono">·{comment.authorCity}</span>
                 )}
                 {comment.replyToUser && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-neon-cyan font-mono">
+                  <span className="inline-flex items-center gap-0.5 text-[10px] text-cyan-600 font-mono font-semibold">
                     <CornerDownRight className="w-2.5 h-2.5" />@{comment.replyToUser}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] text-slate-600 font-mono">{formatTime(comment.createdAt)}</span>
+                <span className="text-[10px] text-slate-500 font-mono">{formatTime(comment.createdAt)}</span>
                 {canDelete && (
                   <button
                     onClick={() => handleDeleteComment(comment._id)}
-                    className="text-slate-600 hover:text-rose-400 p-0.5 cursor-pointer transition-colors"
+                    className="text-slate-400 hover:text-rose-600 p-0.5 cursor-pointer transition-colors"
                     title="Delete reply"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -299,7 +299,7 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
             </div>
 
             {/* Content */}
-            <p className="text-[12px] text-slate-200 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+            <p className="text-[12px] text-slate-800 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-0.5">
@@ -339,7 +339,7 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
   // ── RENDER ────────────────────────────────────────────────────
   return (
     <>
-      <article className="rounded-xl border border-slate-800 bg-obsidian-900 overflow-hidden">
+      <article className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
 
         {/* ── POST BODY ── */}
         <div className="p-4 space-y-3">
@@ -351,23 +351,23 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                  <span className="text-sm font-bold text-white truncate">{authorName}</span>
+                  <span className="text-sm font-bold text-slate-900 truncate">{authorName}</span>
                   {authorRole === 'admin' && (
-                    <span className="px-1.5 py-px text-[9px] font-bold font-mono rounded bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30">ADMIN</span>
+                    <span className="px-1.5 py-px text-[9px] font-bold font-mono rounded bg-cyan-50 text-cyan-700 border border-cyan-200">ADMIN</span>
                   )}
-                  <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">·</span>
-                  <span className="text-[10px] text-neon-cyan font-mono flex items-center gap-0.5 hidden sm:flex">
+                  <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">·</span>
+                  <span className="text-[10px] text-cyan-600 font-mono flex items-center gap-0.5 hidden sm:flex">
                     <MapPin className="w-2.5 h-2.5" />{postCity}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <TagBadge tag={postTag} />
-                  <span className="text-[10px] text-slate-600 font-mono">{formatTime(post.createdAt)}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{formatTime(post.createdAt)}</span>
                   {canDeletePost && (
                     <button
                       onClick={handleDeletePost}
                       disabled={isDeletingPost}
-                      className="p-1 rounded-md text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
                       title="Delete broadcast"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -376,44 +376,44 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
                 </div>
               </div>
               {/* City on mobile (shown under name) */}
-              <div className="flex items-center gap-0.5 text-[10px] text-neon-cyan font-mono mt-0.5 sm:hidden">
+              <div className="flex items-center gap-0.5 text-[10px] text-cyan-600 font-mono mt-0.5 sm:hidden">
                 <MapPin className="w-2.5 h-2.5" />{postCity}
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <p className="text-[13px] text-slate-200 leading-relaxed whitespace-pre-line">{post.content}</p>
+          <p className="text-[13px] text-slate-800 leading-relaxed whitespace-pre-line">{post.content}</p>
 
           {/* Media */}
           {mediaUrl && (
             <div
               onClick={() => setIsMediaZoomed(true)}
-              className="rounded-lg border border-slate-800 overflow-hidden cursor-pointer relative group"
+              className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden cursor-pointer relative group flex items-center justify-center max-h-80"
             >
-              <img src={mediaUrl} alt="Attachment" className="w-full max-h-64 object-cover" loading="lazy" />
-              <div className="absolute bottom-2 right-2 bg-obsidian-950/80 backdrop-blur px-2 py-1 rounded-md text-[10px] text-slate-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Maximize2 className="w-3 h-3 text-neon-cyan" /> View
+              <img src={mediaUrl} alt="Attachment" className="max-h-80 w-auto max-w-full object-contain mx-auto" loading="lazy" />
+              <div className="absolute bottom-2 right-2 bg-slate-900/80 backdrop-blur px-2.5 py-1 rounded-md text-[10px] text-white flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Maximize2 className="w-3 h-3 text-cyan-400" /> View Full
               </div>
             </div>
           )}
 
           {/* Actions bar */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
             <div className="flex items-center gap-1">
               {/* Like */}
               <button
                 onClick={handleToggleLike}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono cursor-pointer transition-colors ${isLiked ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:border-slate-800'}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono cursor-pointer transition-colors ${isLiked ? 'text-rose-600 bg-rose-50 border border-rose-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}
               >
-                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-current text-rose-600' : ''}`} />
                 <span>{likesCount}</span>
               </button>
 
               {/* Replies toggle */}
               <button
                 onClick={() => setShowThread((v) => !v)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono cursor-pointer transition-colors ${showThread ? 'text-neon-cyan border border-neon-cyan/20 bg-neon-cyan/5' : 'text-slate-400 hover:text-slate-200 border border-transparent hover:border-slate-800'}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono cursor-pointer transition-colors ${showThread ? 'text-cyan-700 border border-cyan-300 bg-cyan-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>{totalReplies}</span>
@@ -424,9 +424,9 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
             {/* Share */}
             <button
               onClick={handleShare}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-slate-400 hover:text-slate-200 border border-transparent hover:border-slate-800 cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent cursor-pointer transition-colors"
             >
-              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Share'}</span>
             </button>
           </div>
@@ -434,7 +434,7 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
 
         {/* ── THREAD SECTION ── */}
         {showThread && (
-          <div className="border-t border-slate-800/60 bg-obsidian-950/40 p-4 space-y-3">
+          <div className="border-t border-slate-100 bg-slate-50/70 p-4 space-y-3">
 
             {/* Comments list */}
             {commentTree.length > 0 && (
@@ -444,7 +444,7 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
             )}
 
             {commentTree.length === 0 && (
-              <p className="text-[11px] text-slate-600 text-center py-2">No replies yet. Be the first!</p>
+              <p className="text-[11px] text-slate-500 text-center py-2">No replies yet. Be the first!</p>
             )}
 
             {/* Reply composer */}
@@ -452,12 +452,12 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
               <form onSubmit={handleSendReply} className="space-y-1.5">
                 {/* Reply-to pill */}
                 {activeReplyTo && (
-                  <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-neon-cyan/8 border border-neon-cyan/20 text-[11px]">
-                    <span className="text-neon-cyan font-mono flex items-center gap-1">
+                  <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-cyan-50 border border-cyan-200 text-[11px]">
+                    <span className="text-cyan-700 font-mono flex items-center gap-1 font-medium">
                       <CornerDownRight className="w-3 h-3" />
-                      Replying to <strong className="text-white ml-1">@{activeReplyTo.authorName}</strong>
+                      Replying to <strong className="text-slate-900 ml-1">@{activeReplyTo.authorName}</strong>
                     </span>
-                    <button type="button" onClick={() => setActiveReplyTo(null)} className="text-slate-500 hover:text-white p-0.5 cursor-pointer">
+                    <button type="button" onClick={() => setActiveReplyTo(null)} className="text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -465,19 +465,19 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
 
                 <div className="flex items-center gap-2">
                   <Avatar src={user?.avatar?.url} name={user?.name} size="xs" />
-                  <div className="flex-1 flex items-center gap-2 bg-obsidian-800 border border-slate-700 rounded-lg px-3 py-1.5 focus-within:border-neon-cyan/50 transition-colors">
+                  <div className="flex-1 flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-100 transition-all shadow-sm">
                     <input
                       type="text"
                       value={replyContent}
                       onChange={(e) => setReplyContent(e.target.value)}
                       placeholder={activeReplyTo ? `Reply to @${activeReplyTo.authorName}…` : 'Write a reply…'}
-                      className="flex-1 bg-transparent text-[12px] text-white placeholder-slate-600 focus:outline-none"
+                      className="flex-1 bg-transparent text-[12px] text-slate-900 placeholder-slate-400 focus:outline-none"
                       autoFocus={Boolean(activeReplyTo)}
                     />
                     <button
                       type="submit"
                       disabled={!replyContent.trim() || isSendingReply}
-                      className="p-1.5 rounded-md bg-neon-cyan text-obsidian-950 hover:bg-neon-cyan/90 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                      className="p-1.5 rounded-md bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shrink-0"
                     >
                       <Send className="w-3 h-3" />
                     </button>
@@ -485,14 +485,14 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
                 </div>
               </form>
             ) : (
-              <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-obsidian-800 border border-slate-700">
-                <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                  <Lock className="w-3 h-3 text-neon-cyan shrink-0" />
+              <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-2 text-[11px] text-slate-600">
+                  <Lock className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
                   <span>Sign in to reply to this thread</span>
                 </div>
                 <button
                   onClick={() => requireAuth('post a reply')}
-                  className="px-2.5 py-1 rounded-md bg-neon-cyan text-obsidian-950 text-[11px] font-bold cursor-pointer hover:bg-neon-cyan/90 shrink-0"
+                  className="px-3 py-1 rounded-md bg-cyan-600 text-white text-[11px] font-bold cursor-pointer hover:bg-cyan-700 shrink-0"
                 >
                   Sign In
                 </button>
@@ -505,7 +505,7 @@ export const PostCard = ({ post, onPostDeleted, onCommentAdded, onCommentDeleted
       {/* ── Media lightbox ── */}
       {mediaUrl && (
         <Modal isOpen={isMediaZoomed} onClose={() => setIsMediaZoomed(false)} title="Photo Evidence" maxWidth="max-w-3xl">
-          <div className="rounded-xl overflow-hidden bg-obsidian-950 border border-slate-800">
+          <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
             <img src={mediaUrl} alt="Enlarged" className="w-full h-auto max-h-[75vh] object-contain mx-auto" />
           </div>
         </Modal>

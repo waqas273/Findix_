@@ -235,15 +235,15 @@ export const MessagesPage = () => {
     <div className="space-y-6 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 font-sans">
       
       {/* 1. TOP TITLE BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-mono font-semibold border border-emerald-500/30 mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-mono font-semibold border border-emerald-200 mb-2 shadow-sm">
             <ShieldCheck className="w-3.5 h-3.5" /> SECURE ZERO-LEAK FINDER RELAY
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 tracking-tight">
             Finder Relay Messages
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
             Real-time end-to-end encrypted relay communications with finders who scanned your physical hardware tags.
           </p>
         </div>
@@ -256,10 +256,10 @@ export const MessagesPage = () => {
               if (activeConvId) fetchMessages(activeConvId);
               addToast('info', 'Synced latest messages');
             }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-obsidian-900 border border-slate-800 text-xs font-mono text-slate-300 hover:text-white hover:border-slate-700 cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-sm cursor-pointer"
             title="Force refresh chat"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-neon-cyan" />
+            <RefreshCw className="w-3.5 h-3.5 text-cyan-600" />
             <span>Sync</span>
           </button>
 
@@ -274,21 +274,21 @@ export const MessagesPage = () => {
 
       {/* 2. CHAT WORKSPACE MATRIX */}
       {loading ? (
-        <div className="h-[620px] rounded-2xl bg-obsidian-950 border border-slate-800 flex items-center justify-center">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <RefreshCw className="w-4 h-4 text-neon-cyan" />
+        <div className="h-[620px] rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+            <RefreshCw className="w-4 h-4 text-cyan-600 animate-spin" />
             <span>Connecting to Findix Encrypted Relay...</span>
           </div>
         </div>
       ) : conversations.length === 0 ? (
         /* Empty State */
-        <div className="text-center py-20 px-4 space-y-4 rounded-2xl bg-obsidian-950 border border-slate-800">
-          <div className="w-16 h-16 rounded-2xl bg-obsidian-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto">
-            <MessageSquare className="w-8 h-8 text-emerald-400" />
+        <div className="text-center py-20 px-4 space-y-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto shadow-sm">
+            <MessageSquare className="w-8 h-8 text-emerald-600" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-white">No Active Relay Threads</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900">No Active Relay Threads</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               When a finder scans your physical Findix QR tag and initiates a return, secure real-time messages will automatically stream here.
             </p>
           </div>
@@ -302,29 +302,29 @@ export const MessagesPage = () => {
           </div>
         </div>
       ) : (
-        <div className="h-[650px] rounded-2xl bg-obsidian-950 border border-slate-800 grid grid-cols-1 md:grid-cols-12 overflow-hidden shadow-2xl">
+        <div className="h-[650px] rounded-2xl bg-white border border-slate-200 grid grid-cols-1 md:grid-cols-12 overflow-hidden shadow-sm">
           
           {/* Left Panel: Conversations List */}
-          <div className={`md:col-span-4 border-r border-slate-800 flex flex-col h-full bg-obsidian-950 ${
+          <div className={`md:col-span-4 border-r border-slate-200 flex flex-col h-full bg-slate-50/60 ${
             showMobileChat ? 'hidden md:flex' : 'flex'
           }`}>
             
             {/* Search Box */}
-            <div className="p-3.5 border-b border-slate-800">
+            <div className="p-3.5 border-b border-slate-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search item, slug, or finder..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-obsidian-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm"
                 />
               </div>
             </div>
 
             {/* Conversation Threads */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-800/40">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-100">
               {filteredConversations.map((conv) => {
                 const isSelected = conv._id === activeConvId;
                 const itemName = conv.qrItemId?.itemName || 'Protected Item';
@@ -341,36 +341,36 @@ export const MessagesPage = () => {
                     onClick={() => handleSelectConversation(conv._id)}
                     className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 transition-colors ${
                       isSelected
-                        ? 'bg-obsidian-900 border-neon-cyan/40 text-white'
-                        : 'bg-transparent border-transparent hover:bg-obsidian-900/60 hover:border-slate-800 text-slate-300'
+                        ? 'bg-white border-cyan-400 text-slate-900 shadow-sm ring-1 ring-cyan-200'
+                        : 'bg-transparent border-transparent hover:bg-white hover:border-slate-200 text-slate-700'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-obsidian-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                       {conv.qrItemId?.itemImage?.url ? (
                         <img src={conv.qrItemId.itemImage.url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <QrCode className="w-5 h-5 text-neon-cyan" />
+                        <QrCode className="w-5 h-5 text-cyan-600" />
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <h4 className="text-xs font-bold text-white truncate">{itemName}</h4>
+                        <h4 className="text-xs font-bold text-slate-900 truncate">{itemName}</h4>
                         {lastTime && (
                           <span className="text-[10px] text-slate-500 font-mono shrink-0">{lastTime}</span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] font-mono text-neon-cyan font-bold">{slug}</span>
+                        <span className="text-[10px] font-mono text-cyan-700 font-bold">{slug}</span>
                         {isLost && (
-                          <span className="px-1.5 py-0.2 rounded bg-rose-500/10 text-neon-rose text-[9px] font-mono font-bold border border-rose-500/20">
+                          <span className="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 text-[9px] font-mono font-bold border border-rose-200">
                             LOST
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[11px] text-slate-400 truncate mt-1">
+                      <p className="text-[11px] text-slate-500 truncate mt-1">
                         {lastMsg}
                       </p>
                     </div>
@@ -382,66 +382,66 @@ export const MessagesPage = () => {
           </div>
 
           {/* Right Panel: Encrypted Chat Window */}
-          <div className={`md:col-span-8 flex flex-col h-full bg-obsidian-900/40 ${
+          <div className={`md:col-span-8 flex flex-col h-full bg-white ${
             showMobileChat ? 'flex' : 'hidden md:flex'
           }`}>
             
             {activeConversation ? (
               <>
                 {/* Chat Top Bar */}
-                <div className="p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-obsidian-950">
+                <div className="p-3.5 sm:p-4 border-b border-slate-200 flex items-center justify-between bg-white">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <button
                       type="button"
                       onClick={() => setShowMobileChat(false)}
-                      className="md:hidden p-2 rounded-xl bg-obsidian-900 text-slate-300 border border-slate-800 cursor-pointer"
+                      className="md:hidden p-2 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 cursor-pointer"
                     >
                       <ArrowLeft className="w-4 h-4" />
                     </button>
 
-                    <div className="w-10 h-10 rounded-xl bg-obsidian-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                       {activeConversation.qrItemId?.itemImage?.url ? (
                         <img src={activeConversation.qrItemId.itemImage.url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
                       )}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="text-xs sm:text-sm font-bold text-white truncate">
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                           {activeConversation.qrItemId?.itemName || 'Recovery Relay'}
                         </h4>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono font-bold border border-emerald-500/30">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold border border-emerald-200">
                           ENCRYPTED
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-mono">
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 font-mono">
                         <button
                           type="button"
                           onClick={() => handleCopySlug(activeConversation.qrItemId?.qrSlug)}
-                          className="hover:text-neon-cyan flex items-center gap-1 cursor-pointer"
+                          className="hover:text-cyan-700 flex items-center gap-1 cursor-pointer font-bold"
                           title="Copy Tag Slug"
                         >
                           <span>{activeConversation.qrItemId?.qrSlug || 'FDX-TAG'}</span>
                           <Copy className="w-3 h-3" />
                         </button>
                         <span>•</span>
-                        <span className="text-emerald-400">Finder Relay Connected</span>
+                        <span className="text-emerald-700 font-semibold">Finder Relay Connected</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="hidden sm:flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[11px] font-mono text-slate-400">Live Sync Active</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-[11px] font-mono text-slate-500">Live Sync Active</span>
                   </div>
                 </div>
 
                 {/* Quick Presets Bar */}
-                <div className="px-4 py-2 bg-obsidian-950/80 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto scrollbar-none">
                   <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold shrink-0">
                     Quick Relays:
                   </span>
@@ -450,7 +450,7 @@ export const MessagesPage = () => {
                       key={idx}
                       type="button"
                       onClick={() => handleSendMessage(preset)}
-                      className="px-2.5 py-1 rounded-lg bg-obsidian-900 border border-slate-800 text-[11px] text-slate-300 hover:text-white hover:border-slate-700 shrink-0 cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] text-slate-700 hover:text-slate-900 hover:border-slate-300 shadow-sm shrink-0 cursor-pointer transition-colors"
                     >
                       {preset}
                     </button>
@@ -458,15 +458,15 @@ export const MessagesPage = () => {
                 </div>
 
                 {/* Messages Stream */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-obsidian-950/30">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 bg-slate-50/50">
                   {loadingMessages ? (
                     <div className="flex items-center justify-center h-full text-xs font-mono text-slate-500">
                       Loading encrypted conversation thread...
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-2 text-slate-500">
-                      <ShieldCheck className="w-8 h-8 text-emerald-400" />
-                      <span className="text-xs text-slate-300 font-medium">Relay channel opened and active.</span>
+                      <ShieldCheck className="w-8 h-8 text-emerald-600" />
+                      <span className="text-xs text-slate-700 font-semibold">Relay channel opened and active.</span>
                       <span className="text-[11px] text-slate-500">Send coordinates or instructions to complete the handover.</span>
                     </div>
                   ) : (
@@ -483,17 +483,17 @@ export const MessagesPage = () => {
                           className={`flex ${isOwner ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-1.5 ${
+                            className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3.5 space-y-1.5 shadow-sm ${
                               isOwner
-                                ? 'bg-cyan-500/20 border border-neon-cyan/40 text-white rounded-tr-none'
-                                : 'bg-obsidian-900 border border-slate-800 text-slate-200 rounded-tl-none'
+                                ? 'bg-cyan-600 text-white rounded-tr-none'
+                                : 'bg-white border border-slate-200 text-slate-900 rounded-tl-none'
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-slate-400">
-                              <span className={isOwner ? 'text-neon-cyan font-bold' : 'text-emerald-400 font-bold'}>
+                            <div className="flex items-center justify-between gap-3 text-[10px] font-mono">
+                              <span className={isOwner ? 'text-cyan-100 font-bold' : 'text-emerald-700 font-bold'}>
                                 {isOwner ? 'You (Tag Owner)' : 'Finder'}
                               </span>
-                              <span>{msgTime}</span>
+                              <span className={isOwner ? 'text-cyan-200' : 'text-slate-400'}>{msgTime}</span>
                             </div>
 
                             <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
@@ -513,12 +513,12 @@ export const MessagesPage = () => {
                     e.preventDefault();
                     handleSendMessage();
                   }}
-                  className="p-3.5 border-t border-slate-800 bg-obsidian-950 flex items-center gap-2"
+                  className="p-3.5 border-t border-slate-200 bg-white flex items-center gap-2"
                 >
                   <button
                     type="button"
                     onClick={handleShareGPS}
-                    className="p-2.5 rounded-xl bg-obsidian-900 border border-slate-800 text-slate-400 hover:text-neon-cyan hover:border-neon-cyan/40 transition-colors cursor-pointer"
+                    className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 hover:text-cyan-700 hover:border-cyan-300 transition-colors cursor-pointer"
                     title="Share Live GPS Coordinates"
                   >
                     <MapPin className="w-4 h-4" />
@@ -529,7 +529,7 @@ export const MessagesPage = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Type encrypted message or handover instruction..."
-                    className="flex-1 bg-obsidian-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm"
                   />
 
                   <Button
@@ -546,9 +546,9 @@ export const MessagesPage = () => {
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-3 p-6 text-slate-500">
-                <MessageSquare className="w-10 h-10 text-slate-600" />
-                <span className="text-sm font-semibold text-white">Select a conversation thread</span>
-                <span className="text-xs text-slate-400 max-w-xs">
+                <MessageSquare className="w-10 h-10 text-slate-400" />
+                <span className="text-sm font-bold text-slate-900">Select a conversation thread</span>
+                <span className="text-xs text-slate-500 max-w-xs">
                   Choose a tag from the left panel to inspect the encrypted communication log with the finder.
                 </span>
               </div>

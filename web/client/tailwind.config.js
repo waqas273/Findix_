@@ -24,19 +24,6 @@ export default {
           800: '#e2e8f0',
           700: '#cbd5e1',
         },
-        // Keep slate standard
-        slate: {
-          950: '#0F172A',
-          900: '#1E293B',
-          800: '#334155',
-          700: '#475569',
-          600: '#64748b',
-          500: '#94a3b8',
-          400: '#cbd5e1',
-          300: '#e2e8f0',
-          200: '#f1f5f9',
-          100: '#f8fafc',
-        },
         neon: {
           cyan: '#0891b2',    // Deep cyan - primary accent
           teal: '#0e7490',    // Darker teal

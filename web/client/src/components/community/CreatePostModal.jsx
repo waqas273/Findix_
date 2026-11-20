@@ -31,9 +31,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const tags = [
-    { id: 'Lost Alert', label: 'Lost Alert', color: 'border-neon-rose text-neon-rose bg-neon-rose/10' },
-    { id: 'Found Alert', label: 'Found Alert', color: 'border-neon-cyan text-neon-cyan bg-neon-cyan/10' },
-    { id: 'General Discussion', label: 'General Discussion', color: 'border-slate-600 text-slate-300 bg-obsidian-850' },
+    { id: 'Lost Alert', label: 'Lost Alert', color: 'border-rose-300 text-rose-700 bg-rose-50 font-bold' },
+    { id: 'Found Alert', label: 'Found Alert', color: 'border-emerald-300 text-emerald-700 bg-emerald-50 font-bold' },
+    { id: 'General Discussion', label: 'General Discussion', color: 'border-cyan-300 text-cyan-700 bg-cyan-50 font-bold' },
   ];
 
   const handleImageSelect = (e) => {
@@ -202,7 +202,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
         
         {/* Quick Tags Selector */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-slate-300">Category Tag</label>
+          <label className="text-xs font-semibold text-slate-700">Category Tag</label>
           <div className="flex items-center gap-2 flex-wrap">
             {tags.map((t) => (
               <button
@@ -211,8 +211,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
                 onClick={() => setTag(t.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                   tag === t.id
-                    ? `${t.color} shadow-neon-sm ring-1 ring-white/20`
-                    : 'bg-obsidian-950 text-slate-400 border-slate-800 hover:text-white'
+                    ? `${t.color} shadow-sm ring-1 ring-cyan-200`
+                    : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900 shadow-sm'
                 }`}
               >
                 {t.label}
@@ -224,15 +224,15 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
         {/* Scope & City Binding Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">Broadcast Feed</label>
-            <div className="flex items-center gap-2 bg-obsidian-950 border border-slate-800 p-1 rounded-xl">
+            <label className="text-xs font-semibold text-slate-700">Broadcast Feed</label>
+            <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setScope('city')}
                 className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                   scope === 'city'
-                    ? 'bg-cyan-gradient text-obsidian-950 font-bold shadow-neon-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-cyan-600 text-white font-bold shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Local City Hub
@@ -242,8 +242,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
                 onClick={() => setScope('global')}
                 className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                   scope === 'global'
-                    ? 'bg-cyan-gradient text-obsidian-950 font-bold shadow-neon-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-cyan-600 text-white font-bold shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Global Feed
@@ -252,11 +252,11 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">Target City</label>
+            <label className="text-xs font-semibold text-slate-700">Target City</label>
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-obsidian-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-neon-cyan transition-colors"
+              className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-cyan-500 shadow-sm transition-colors"
             >
               <option value="Karachi">Karachi</option>
               <option value="Lahore">Lahore</option>
@@ -273,14 +273,14 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
 
         {/* Text Content */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-slate-300">Alert Description</label>
+          <label className="text-xs font-semibold text-slate-700">Alert Description</label>
           <textarea
             rows={4}
             placeholder="Describe the lost or found item, last known landmark, time of loss, reward bounty, or contact instructions..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
-            className="w-full p-3 rounded-xl bg-obsidian-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan resize-none transition-colors"
+            className="w-full p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm resize-none transition-colors"
           />
           <span className="text-[10px] text-slate-500 block text-right font-mono">
             {content.length} / 2000 characters
@@ -289,24 +289,24 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
 
         {/* Photo Upload Attachment Box */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-slate-300">Photo Attachment (Optional)</label>
+          <label className="text-xs font-semibold text-slate-700">Photo Attachment (Optional)</label>
           
           {imagePreview ? (
-            <div className="relative w-full h-36 rounded-xl border border-slate-800 bg-obsidian-950 overflow-hidden group">
+            <div className="relative w-full h-36 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden group shadow-sm">
               <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute top-2 right-2 p-1.5 rounded-lg bg-obsidian-950/80 border border-slate-700 text-neon-rose hover:bg-neon-rose/20 transition-colors"
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-900/80 text-white hover:text-rose-400 transition-colors cursor-pointer"
                 title="Remove image"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-700 rounded-xl bg-obsidian-950 hover:bg-obsidian-850 transition-colors cursor-pointer text-center space-y-1">
-              <UploadCloud className="w-6 h-6 text-neon-cyan" />
-              <span className="text-xs text-slate-300 font-medium">Click to upload photo</span>
+            <label className="flex flex-col items-center justify-center p-4 border border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer text-center space-y-1">
+              <UploadCloud className="w-6 h-6 text-cyan-600" />
+              <span className="text-xs text-slate-700 font-semibold">Click to upload photo</span>
               <span className="text-[10px] text-slate-500">PNG, JPG, or WEBP up to 5MB</span>
               <input
                 type="file"
@@ -319,7 +319,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-2 border-t border-slate-800 flex items-center justify-end gap-3">
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-3">
           <Button type="button" variant="ghost" size="md" onClick={onClose}>
             Cancel
           </Button>
@@ -329,7 +329,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPostCreated, defaultCity = 
             variant="primary"
             size="md"
             loading={isSubmitting}
-            className="shadow-neon-sm font-bold"
+            className="shadow-sm font-bold"
           >
             <span>Publish Community Alert</span>
             <Check className="w-4 h-4 ml-1" />

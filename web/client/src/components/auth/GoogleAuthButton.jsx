@@ -44,11 +44,11 @@ export const GoogleAuthButton = ({ text = 'Continue with Google' }) => {
   return (
     <div className="w-full flex flex-col items-center justify-center space-y-2">
       <div className="w-full relative flex justify-center">
-        <div className="w-full overflow-hidden flex justify-center bg-obsidian-900/90 hover:bg-obsidian-850 border border-slate-800 hover:border-slate-700 rounded-2xl transition-all shadow-md py-1 px-2">
+        <div className="w-full overflow-hidden flex justify-center bg-white border border-slate-200 hover:border-slate-300 rounded-2xl transition-all shadow-sm py-1.5 px-2">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            theme="filled_black"
+            theme="outline"
             size="large"
             shape="pill"
             text="continue_with"
@@ -57,7 +57,7 @@ export const GoogleAuthButton = ({ text = 'Continue with Google' }) => {
         </div>
       </div>
       {loading && (
-        <span className="text-[11px] text-neon-cyan font-mono animate-pulse">
+        <span className="text-[11px] text-cyan-600 font-mono animate-pulse font-semibold">
           Authenticating secure Google session...
         </span>
       )}

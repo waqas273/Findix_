@@ -84,28 +84,28 @@ export const CommentsDrawer = ({ isOpen, onClose, post, onCommentAdded }) => {
       <div className="flex flex-col h-full justify-between space-y-4 font-sans">
         
         {/* Post Snippet Header */}
-        <div className="p-3.5 rounded-xl bg-obsidian-950 border border-slate-800 space-y-1.5">
+        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 shadow-sm">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-white truncate max-w-[200px]">
+            <span className="font-bold text-slate-900 truncate max-w-[200px]">
               {authorName}
             </span>
-            <span className="text-[11px] text-neon-cyan flex items-center gap-1 font-mono">
-              <MapPin className="w-3 h-3" /> {post.city || 'Pakistan'}
+            <span className="text-[11px] text-cyan-700 flex items-center gap-1 font-mono font-medium">
+              <MapPin className="w-3 h-3 text-cyan-600" /> {post.city || 'Pakistan'}
             </span>
           </div>
-          <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-700 line-clamp-2 leading-relaxed">
             "{post.content}"
           </p>
         </div>
 
         {/* Comment Thread List */}
-        <div className="flex-1 overflow-y-auto space-y-3 pr-1 divide-y divide-slate-800/60 max-h-[52vh]">
+        <div className="flex-1 overflow-y-auto space-y-3 pr-1 divide-y divide-slate-100 max-h-[52vh]">
           {comments.length === 0 ? (
             <div className="py-12 text-center space-y-2">
-              <div className="w-12 h-12 rounded-xl bg-obsidian-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto">
-                <MessageSquare className="w-6 h-6 text-neon-cyan" />
+              <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mx-auto">
+                <MessageSquare className="w-6 h-6 text-cyan-600" />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 No replies yet. Be the first to share a lead or coordinate recovery!
               </p>
             </div>
@@ -114,10 +114,10 @@ export const CommentsDrawer = ({ isOpen, onClose, post, onCommentAdded }) => {
               <div key={comment._id || idx} className="pt-3 first:pt-0 space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-obsidian-900 border border-slate-800 flex items-center justify-center text-[10px] font-bold text-neon-cyan">
+                    <div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-cyan-700">
                       {comment.authorName ? comment.authorName[0].toUpperCase() : 'U'}
                     </div>
-                    <span className="font-bold text-white text-xs">{comment.authorName}</span>
+                    <span className="font-bold text-slate-900 text-xs">{comment.authorName}</span>
                     {comment.authorCity && (
                       <span className="text-[10px] text-slate-500 font-mono">({comment.authorCity})</span>
                     )}
@@ -126,7 +126,7 @@ export const CommentsDrawer = ({ isOpen, onClose, post, onCommentAdded }) => {
                     {comment.createdAt ? new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 pl-8 leading-relaxed whitespace-pre-wrap">
+                <p className="text-xs text-slate-800 pl-8 leading-relaxed whitespace-pre-wrap">
                   {comment.content}
                 </p>
               </div>
@@ -135,19 +135,19 @@ export const CommentsDrawer = ({ isOpen, onClose, post, onCommentAdded }) => {
         </div>
 
         {/* Comment Input Footer */}
-        <form onSubmit={handleSendComment} className="pt-3 border-t border-slate-800 space-y-2">
+        <form onSubmit={handleSendComment} className="pt-3 border-t border-slate-100 space-y-2">
           <div className="relative">
             <textarea
               rows={2}
               placeholder="Write a reply or coordinate recovery details..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="w-full p-3 pr-12 rounded-xl bg-obsidian-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan resize-none"
+              className="w-full p-3 pr-12 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm resize-none"
             />
             <button
               type="submit"
               disabled={isSubmitting || !commentText.trim()}
-              className="absolute right-2.5 bottom-3.5 p-2 rounded-lg bg-neon-cyan text-obsidian-950 hover:bg-neon-cyan/90 disabled:opacity-30 cursor-pointer font-bold"
+              className="absolute right-2.5 bottom-3.5 p-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-30 cursor-pointer font-bold shadow-sm"
               title="Send reply"
             >
               <Send className="w-3.5 h-3.5" />

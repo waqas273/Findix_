@@ -80,16 +80,16 @@ export const QuickFinderAuthModal = ({ isOpen, onClose, qrSlug, itemName, onSucc
         
         {/* Modal Header */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full bg-obsidian-950 p-1.5 mx-auto border border-slate-700/80 shadow-md flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full bg-white p-1.5 mx-auto border border-slate-200 shadow-sm flex items-center justify-center">
             <img src="/logo.png" alt="Findix" className="w-full h-full object-cover rounded-full" />
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-lg font-display font-bold text-white">
+            <h3 className="text-lg font-display font-bold text-slate-900">
               {isLoginMode ? 'Sign In to Message Owner' : '10-Second Quick Finder Access'}
             </h3>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto">
-              Directly coordinate recovery for <strong className="text-neon-cyan">{itemName || 'Protected Item'}</strong> ({qrSlug}) with zero spam.
+            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+              Directly coordinate recovery for <strong className="text-cyan-700">{itemName || 'Protected Item'}</strong> ({qrSlug}) with zero spam.
             </p>
           </div>
         </div>
@@ -134,8 +134,8 @@ export const QuickFinderAuthModal = ({ isOpen, onClose, qrSlug, itemName, onSucc
           />
 
           {/* Guaranteed zero-leak note */}
-          <div className="p-2.5 rounded-xl bg-obsidian-950 border border-slate-800 flex items-center gap-2 text-[11px] text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-neon-cyan shrink-0" />
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2 text-[11px] text-slate-600">
+            <ShieldCheck className="w-4 h-4 text-cyan-600 shrink-0" />
             <span>Findix encrypted relay ensures private, spam-free communication.</span>
           </div>
 

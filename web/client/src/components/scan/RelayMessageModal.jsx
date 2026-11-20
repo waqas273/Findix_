@@ -64,10 +64,10 @@ export const RelayMessageModal = ({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-3 rounded-xl bg-obsidian-950 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-neon-cyan shrink-0 mt-0.5" />
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5 text-xs text-slate-600 shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-cyan-600 shrink-0 mt-0.5" />
             <span>
-              <b className="text-white">Findix Relay Shield:</b> Your communication is encrypted. The owner’s identity and personal address remain confidential.
+              <b className="text-slate-900">Findix Relay Shield:</b> Your communication is encrypted. The owner’s identity and personal address remain confidential.
             </span>
           </div>
 
@@ -89,7 +89,7 @@ export const RelayMessageModal = ({
           />
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-slate-300">
+            <label className="block text-xs font-semibold text-slate-700">
               Message or Return Instructions
             </label>
             <textarea
@@ -97,15 +97,15 @@ export const RelayMessageModal = ({
               placeholder="e.g. I have safe custody of your item. Please call me to coordinate collection..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-obsidian-850 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan"
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm transition-colors resize-none"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <Button type="button" variant="ghost" onClick={handleReset}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+            <Button type="submit" variant="primary" isLoading={isSubmitting} className="font-bold shadow-sm">
               <Send className="w-4 h-4 mr-1.5" />
               <span>Send Relay Alert</span>
             </Button>

@@ -185,33 +185,33 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
       <div className="flex flex-col h-full justify-between space-y-4">
         
         {/* Linked Item Header Bar */}
-        <div className="p-3.5 rounded-2xl bg-obsidian-950 border border-slate-800 space-y-2">
+        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-obsidian-900 border border-slate-700 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                 {activeItem?.itemImage?.url ? (
                   <img src={activeItem.itemImage.url} alt={activeItem.itemName} className="w-full h-full object-cover rounded-lg" />
                 ) : (
-                  <Tag className="w-5 h-5 text-neon-cyan" />
+                  <Tag className="w-5 h-5 text-cyan-600" />
                 )}
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white truncate max-w-[220px]">
+                <h3 className="text-sm font-bold text-slate-900 truncate max-w-[220px]">
                   {activeItem.itemName || 'Protected Item'}
                 </h3>
-                <span className="text-xs font-mono text-neon-cyan block">
+                <span className="text-xs font-mono text-cyan-700 font-bold block">
                   Tag: {activeItem.qrSlug || qrSlug || 'FDX-TAG'}
                 </span>
               </div>
             </div>
 
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-50 text-cyan-700 border border-cyan-200">
               Inquiry Live
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 bg-obsidian-900/60 p-1.5 rounded-lg">
-            <ShieldCheck className="w-3.5 h-3.5 text-neon-teal shrink-0" />
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-600 bg-white p-2 rounded-xl border border-slate-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Encrypted zero-leak channel. Phone numbers remain shielded.</span>
           </div>
         </div>
@@ -220,17 +220,17 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
         <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[55vh]">
           {loading ? (
             <div className="py-16 text-center space-y-2">
-              <div className="w-8 h-8 rounded-full border-2 border-neon-cyan border-t-transparent animate-spin mx-auto" />
-              <p className="text-xs text-slate-400">Connecting to encrypted recovery channel...</p>
+              <div className="w-8 h-8 rounded-full border-2 border-cyan-600 border-t-transparent animate-spin mx-auto" />
+              <p className="text-xs text-slate-500">Connecting to encrypted recovery channel...</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="py-16 text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-obsidian-950 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto shadow-inner">
-                <MessageSquare className="w-7 h-7 text-neon-cyan" />
+              <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 mx-auto shadow-sm">
+                <MessageSquare className="w-7 h-7 text-cyan-600" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-white">Start the Conversation</h4>
-                <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                <h4 className="text-sm font-bold text-slate-900">Start the Conversation</h4>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">
                   Coordinate handover time, confirm item condition, or send GPS coordinates.
                 </p>
               </div>
@@ -247,8 +247,8 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
                     <div
                       className={`max-w-[85%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                         isSender
-                          ? 'bg-cyan-500/20 border border-neon-cyan/40 text-white font-medium rounded-tr-sm shadow-sm'
-                          : 'bg-obsidian-950 border border-slate-800 text-slate-200 rounded-tl-sm'
+                          ? 'bg-cyan-600 text-white font-medium rounded-tr-sm shadow-sm'
+                          : 'bg-slate-100 border border-slate-200 text-slate-900 rounded-tl-sm shadow-sm'
                       }`}
                     >
                       {msg.content || msg.text}
@@ -262,7 +262,7 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
                     </span>
                     {isSender && (
                       msg.isRead ? (
-                        <CheckCheck className="w-3 h-3 text-neon-cyan" title="Read by recipient" />
+                        <CheckCheck className="w-3 h-3 text-cyan-600" title="Read by recipient" />
                       ) : (
                         <Check className="w-3 h-3 text-slate-400" title="Sent" />
                       )
@@ -276,12 +276,12 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
         </div>
 
         {/* Quick Suggestion Chips & Location Pin Bar */}
-        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+        <div className="space-y-2 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <button
               type="button"
               onClick={handleShareLocationPin}
-              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40 hover:bg-neon-cyan/25 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-cyan-50 text-cyan-700 border border-cyan-300 hover:bg-cyan-100 transition-colors shrink-0 flex items-center gap-1 cursor-pointer shadow-sm"
             >
               <Compass className="w-3.5 h-3.5" />
               <span>Share Location Pin</span>
@@ -292,7 +292,7 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
                 key={i}
                 type="button"
                 onClick={() => handleSendMessage(chip)}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-obsidian-950 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white transition-colors shrink-0 whitespace-nowrap cursor-pointer"
+                className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:text-slate-900 shadow-sm transition-colors shrink-0 whitespace-nowrap cursor-pointer"
               >
                 {chip}
               </button>
@@ -312,7 +312,7 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
               placeholder="Type message to owner..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-obsidian-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-neon-cyan transition-colors"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-sm transition-colors"
             />
 
             <Button
@@ -320,7 +320,7 @@ export const ChatDrawer = ({ isOpen, onClose, conversationId, qrSlug, initialIte
               variant="primary"
               size="md"
               disabled={sending || !inputMessage.trim()}
-              className="px-3.5 py-2.5 shrink-0 shadow-neon-sm"
+              className="px-3.5 py-2.5 shrink-0 shadow-sm font-bold"
             >
               <Send className="w-4 h-4" />
             </Button>
